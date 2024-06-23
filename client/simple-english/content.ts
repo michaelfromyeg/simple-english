@@ -151,13 +151,6 @@ storage.watch({
     const body = document.querySelector("#bodyContent")
     body.innerHTML = simplifiedContent
 
-    document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
-      phrase.onclick = async () => {
-        phrase.id = "selected"
-        fetchExpand()
-      }
-      phrase.style.color = "black"
-      phrase.style.backgroundColor = "aqua"
-    })
+    setupNewKeyWords()
   }
 })
