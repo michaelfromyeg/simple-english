@@ -1,5 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { useReducer, useState } from "react"
+import { useState, type ReactElement } from "react"
+
+// import { fetchSimplifiedPage } from "~content"
 
 import "./style.css"
 
@@ -38,13 +40,27 @@ function AnimatedTabs() {
   )
 }
 
-function IndexPopup() {
-  const [data, setData] = useState("")
-  const [count, increase] = useReducer((c) => c + 1, 0)
+export default function Popup(): ReactElement {
+  const [isSimplified, setIsSimplified] = useState<boolean>(false)
+
+  const handleClick = async (event: any): Promise<void> => {
+    console.log("Clicked the simplify button!")
+
+    if (isSimplified) {
+      return
+    }
+
+    try {
+      // await fetchSimplifiedPage()
+
+      setIsSimplified(true)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   return (
     <AnimatePresence>
-      (
       <motion.div
         exit={{
           y: -20,
@@ -62,24 +78,26 @@ function IndexPopup() {
         className="card">
         <div
           style={{
-            padding: 16
+            padding: 16,
+            width: 200,
+            borderRadius: 8
           }}>
-          <AnimatedTabs />
+          {/* <AnimatedTabs /> */}
           <h2 className="text-gray-900 font-bold text-xl mb-2">
             Let's break it down
           </h2>
-          <input onChange={(e) => setData(e.target.value)} value={data} />
+          {/* <input onChange={(e) => setData(e.target.value)} value={data} /> */}
           <button
-            onClick={() => increase()}
+            onClick={handleClick}
+            style={{
+              color: "white"
+            }}
             type="button"
             className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-black bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
             Simplify Page
           </button>
         </div>
       </motion.div>
-      )
     </AnimatePresence>
   )
 }
-
-export default IndexPopup

@@ -14,15 +14,32 @@ export const config: PlasmoCSConfig = {
   matches: ["https://*.wikipedia.org/*"]
 }
 
-const fetchSimplifiedPage = async () => {
+export const fetchSimplifiedPage = async () => {
   try {
-    document.querySelector("#bodyContent").innerHTML = "<br><br>Loading..."
+    const body = document.querySelector("#bodyContent")
+    // const body = document.querySelector("#mw-content-text")
+
+    if (!body) {
+      console.error("Couldn't find body element")
+      return
+    }
+
+    body.innerHTML = "<br><br>Loading..."
     const simplifiedResponse = await axios.get(
       `${BASE_URL}/simplify?url=${window.location.href}`
     )
+    if (
+      simplifiedResponse?.status !== 200 ||
+      !simplifiedResponse?.data?.content
+    ) {
+      console.error(
+        `Failed to fetch; got status=${simplifiedResponse?.status}`,
+        { response: simplifiedResponse }
+      )
+      return
+    }
 
-    document.querySelector("#bodyContent").innerHTML =
-      simplifiedResponse.data.content
+    body.innerHTML = simplifiedResponse.data.content
 
     document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
       phrase.onclick = async () => {
@@ -37,7 +54,7 @@ const fetchSimplifiedPage = async () => {
   }
 }
 
-const fetchExpand = async () => {
+export const fetchExpand = async () => {
   try {
     // fetch the text content of the surrounding <p> tag that the key is in
     const key_phrase = document.querySelector("#selected")
