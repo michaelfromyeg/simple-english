@@ -10,6 +10,19 @@ const MOCK_SERVER_RESPONSE = `
     Some key phrases about Europe include <a class="key">continent</a>, <a class="key">diverse cultures</a>, and <a class="key">famous landmarks</a>.
 `
 
+const colors = [
+  "#6B97C7",
+  "#A4C76B",
+  "#E4D395",
+  "#E7B1E5",
+  "#B1CDE7",
+  "#CF9BE7"
+]
+
+function getRandomColor() {
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
 export const config: PlasmoCSConfig = {
   matches: ["https://*.wikipedia.org/*"]
 }
@@ -54,7 +67,7 @@ export const fetchSimplifiedPage = async (stream: boolean = false) => {
               fetchExpand()
             }
             phrase.style.color = "black"
-            phrase.style.backgroundColor = "aqua"
+            phrase.style.backgroundColor = getRandomColor()
           })
         }
       }, 100) // Adjust the interval delay as needed
@@ -67,7 +80,7 @@ export const fetchSimplifiedPage = async (stream: boolean = false) => {
           fetchExpand()
         }
         phrase.style.color = "black"
-        phrase.style.backgroundColor = "aqua"
+        phrase.style.backgroundColor = getRandomColor()
       })
     }
   } catch (error) {
