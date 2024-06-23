@@ -27,11 +27,12 @@ TODO(michaelfromyeg): write!
 import os
 import signal
 import sys
+from typing import Tuple
 
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from openai import AssistantEventHandler, OpenAI
 from typing_extensions import override
@@ -46,6 +47,9 @@ CORS(app)
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
+
+# NOTE: this creates an assistant programatically; maybe there's a way to just 'update' one
+# ...use it sparingly
 
 # assistant = client.beta.assistants.create(
 #     name="Simple English Wikipedia Assistant",
@@ -75,12 +79,13 @@ def url_to_wid(url: str) -> str:
     return wid
 
 
-def save_article(url: str, article: str) -> None:
+def save_article(url: str, article: str, short: bool = False) -> None:
     """
     Save the HTML file of an article to disk.
     """
     wid = url_to_wid(url)
-    file_path = os.path.join("data", f"{wid}.txt")
+    file_name = f"{wid}-short.txt" if short else f"{wid}.txt"
+    file_path = os.path.join("data", file_name)
 
     if os.path.isfile(file_path):
         return
@@ -91,12 +96,13 @@ def save_article(url: str, article: str) -> None:
     return None
 
 
-def read_article(url: str) -> str | None:
+def read_article(url: str, short: bool = False) -> str | None:
     """
     Read the article from disk, if it exists.
     """
     wid = url_to_wid(url)
-    file_path = os.path.join("data", f"{wid}.txt")
+    file_name = f"{wid}-short.txt" if short else f"{wid}.txt"
+    file_path = os.path.join("data", file_name)
 
     if not os.path.isfile(file_path):
         return None
@@ -115,6 +121,7 @@ def tidy(html: str) -> str:
 
     body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
 
+    # Remove everything from "See also" on
     h2_elements = body.find_all("h2", class_=None)
     for h2_element in h2_elements:
         if h2_element.find("span", id="See_also"):
@@ -123,18 +130,40 @@ def tidy(html: str) -> str:
                 h2_element.decompose()
                 h2_element = next_element
 
+    # Remove the side panel, if it exists
     infobox = body.find("table", class_="infobox")
     if infobox:
         infobox.decompose()
 
     text_content = body.get_text()
 
+    # Dump the content into a text file, stripping links, etc.
+    # if we had more time, it'd be nice to preserve some structure (e.g., headings, paragraphs)
+    # but GPT-4o does pretty well with just this
     lines = text_content.split("\n")
     lines_stripped = [line.strip() for line in lines]
     non_empty_lines = [line for line in lines_stripped if line]
     cleaned_text = "\n".join(non_empty_lines)
 
     return cleaned_text
+
+
+def sanitize(output: str) -> str:
+    """
+    Check for bad parts of the output, by line.
+
+    There's definitely a faster way you could do this, but we're
+    dominated by the LLM right now so who cares.
+    """
+    lines = output.split("\n")
+
+    if lines[0] == "```html":
+        lines = lines[1:]
+
+    if lines[-1] == "```":
+        lines = lines[:-1]
+
+    return "\n".join(lines)
 
 
 class EventHandler(AssistantEventHandler):
@@ -152,17 +181,24 @@ class EventHandler(AssistantEventHandler):
 
 
 @app.route("/status", methods=["GET"])
-def status():
+def status() -> Tuple[Response, int]:
+    """
+    Make sure the API is alive.
+    """
     return jsonify({"status": "up"}), 200
 
 
 @app.route("/simplify", methods=["GET"])
-def simplify():
-    print("called GET /simplify with args: ", request.args)
-
+def simplify() -> Tuple[Response, int]:
+    """ """
     url = request.args.get("url")
     if not url:
         return jsonify({"error": "URL parameter is required"}), 400
+
+    # naive caching so the project looks cool
+    simple_content = read_article(url, short=True)
+    if simple_content is not None:
+        return jsonify({"content": simple_content}), 200
 
     # first, get the article contents
     # checks an on-disk cache first (so we don't get rate-limited, or something)
@@ -183,8 +219,6 @@ def simplify():
     if html_content is None or not html_content:
         return jsonify({"error": "Couldn't get content for page"}), 500
 
-    # return jsonify({"status": "ok"})
-
     try:
         thread = client.beta.threads.create()
 
@@ -202,17 +236,21 @@ def simplify():
 
         print(f"Run for {url} completed with status: {run.status}")
 
-        content = ""
+        simple_content = ""
         if run.status == "completed":
             messages = client.beta.threads.messages.list(thread_id=thread.id)
 
             for message in messages:
                 assert message.content[0].type == "text"
-                # print({"role": message.role, "message": message.content[0].text.value})
-
                 if message.role == "assistant":
-                    content += message.content[0].text.value
-        return jsonify({"content": content}), 200
+                    simple_content += message.content[0].text.value
+
+        sanitized_content = sanitize(simple_content)
+
+        # naive caching part 2
+        save_article(url, sanitized_content, short=True)
+
+        return jsonify({"content": sanitized_content}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

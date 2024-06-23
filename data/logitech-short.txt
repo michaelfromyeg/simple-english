@@ -1,0 +1,13 @@
+<p><a class="key">Logitech International S.A.</a> is a <a class="key">Swiss company</a> that makes computer parts and software. It started in 1981 in Apples, Vaud, Switzerland. The company HQ is in <a class="key">Lausanne, Switzerland</a>.</p>
+
+<p>Logitech creates things like keyboards, mice, and webcams. They also make products for video communication and smart homes. The name "Logitech" comes from the French word "logiciel," which means software.</p>
+
+<ul>
+  <li>Founded by Daniel Borel, Pierluigi Zappacosta, and Giacomo Marini.</li>
+  <li>First product: P4 mouse in 1982.</li>
+  <li>First wireless mouse in 1984.</li>
+  <li>Products: Keyboards, mice, webcams, Bluetooth speakers, and more.</li>
+  <li>Acquisitions: Ultimate Ears, Jaybird, Astro Gaming, Blue Microphones, Streamlabs.</li>
+</ul>
+
+<p>In the 1990s, Logitech moved some production to Asia, mainly China. About half of their products are made there. The company still makes some parts in other countries or uses other manufacturers.</p>
