@@ -41,13 +41,19 @@ export const fetchSimplifiedPage = async () => {
 
     body.innerHTML = simplifiedResponse.data.content
 
+    const colors = ["#6B97C7", "#A4C76B", "#E4D395", "#E7B1E5", "#B1CDE7", "#CF9BE7"];
+
+function getRandomColor() {
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
     document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
       phrase.onclick = async () => {
         phrase.id = "selected"
         fetchExpand()
       }
       phrase.style.color = "black"
-      phrase.style.backgroundColor = "aqua"
+      phrase.style.backgroundColor = getRandomColor()
     })
   } catch (error) {
     console.error(error)
