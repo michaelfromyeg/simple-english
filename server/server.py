@@ -257,6 +257,9 @@ def simplify() -> Tuple[Response, int]:
 
 @app.errorhandler(404)
 def not_found_error(error):
+    """
+    Wrap the error in a 404 JSON response.
+    """
     response = jsonify({"error": "Not Found", "message": str(error)})
     response.status_code = 404
     return response
@@ -264,19 +267,23 @@ def not_found_error(error):
 
 @app.errorhandler(500)
 def internal_error(error):
+    """
+    Wrap the error in a 500 JSON response.
+    """
     response = jsonify({"error": "Internal Server Error", "message": str(error)})
     response.status_code = 500
     return response
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
 def signal_handler(sig, frame):
+    """
+    If we created an assistant, we should maybe delete it.
+    """
     print("Received Ctrl+C - cleaning up...")
     # client.beta.assistants.delete(assistant.id)
     sys.exit(0)
 
 
-signal.signal(signal.SIGINT, signal_handler)
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    app.run(debug=True)
