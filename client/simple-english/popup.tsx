@@ -23,7 +23,7 @@ function DefaultTabContent({
     })
   }
 
-  window.close()
+  // window.close()
 
   return (
     <motion.div
