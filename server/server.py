@@ -1,8 +1,11 @@
 import os
 
 import requests
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from openai import OpenAI
+
+load_dotenv()
 
 DEBUG = False
 
