@@ -115,13 +115,17 @@ def tidy(html: str) -> str:
 
     body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
 
-    h2_elements = soup.find_all("h2", class_=None)
+    h2_elements = body.find_all("h2", class_=None)
     for h2_element in h2_elements:
         if h2_element.find("span", id="See_also"):
             while h2_element:
                 next_element = h2_element.find_next_sibling()
                 h2_element.decompose()
                 h2_element = next_element
+
+    infobox = body.find("table", class_="infobox")
+    if infobox:
+        infobox.decompose()
 
     text_content = body.get_text()
 
@@ -194,7 +198,6 @@ def simplify():
         run = client.beta.threads.runs.create_and_poll(
             thread_id=thread.id,
             assistant_id=ASSISTANT_ID,
-            instructions="Output the HTML.",
         )
 
         print(f"Run for {url} completed with status: {run.status}")
