@@ -3,14 +3,14 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from openai import AssistantEventHandler, OpenAI
 from typing_extensions import override
 
 load_dotenv()
 
-DEBUG = False
+DEBUG = True
 
 app = Flask(__name__)
 CORS(app)
@@ -91,17 +91,21 @@ def tidy_html(html: str) -> str:
     if DEBUG:
         print(body.prettify())
 
-    return body
+    return body.prettify()
 
 
 class EventHandler(AssistantEventHandler):
     @override
     def on_text_created(self, text) -> None:
-        print("", end="", flush=True)
+        print("", end="")
 
     @override
     def on_text_delta(self, delta, snapshot) -> None:
-        print(delta.value, end="", flush=True)
+        print(delta.value, end="")
+
+    @override
+    def on_end(self) -> None:
+        print("", end="", flush=True)
 
 
 @app.route("/status", methods=["GET"])
@@ -123,10 +127,16 @@ def simplify():
             response = requests.get(url)
             response.raise_for_status()
 
-            html_content = tidy_html(html_content)
+            if DEBUG:
+                print(f"Got response of {response.status_code} for {url}")
+
+            html_content = tidy_html(response.text)
             save_article(url, html_content)
         except requests.RequestException as e:
             return jsonify({"error": str(e)}), 500
+
+    if html_content is None or not html_content:
+        return jsonify({"error": "Couldn't get content for page"}), 500
 
     try:
         thread = client.beta.threads.create()
@@ -138,16 +148,18 @@ def simplify():
         )
 
         # TODO(michaelfromyeg): replace this step with data in the actual response
-        with client.beta.threads.runs.stream(
-            thread_id=thread.id,
-            assistant_id=assistant.id,
-            event_handler=EventHandler(),
-        ) as stream:
-            stream.until_done()
+        def generate():
+            with client.beta.threads.runs.stream(
+                thread_id=thread.id,
+                assistant_id=assistant.id,
+                event_handler=EventHandler(),
+            ) as stream:
+                for message in stream:
+                    yield message
+
+        return Response(generate(), content_type="text/event-stream")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-    return jsonify({"status": "ok"}), 200
 
 
 @app.errorhandler(404)
