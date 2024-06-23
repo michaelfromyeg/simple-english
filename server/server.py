@@ -111,6 +111,7 @@ def status():
 
 @app.route("/simplify", methods=["GET"])
 def simplify():
+    print("simplify with arg: ", request.args)
     url = request.args.get("url")
     if not url:
         return jsonify({"error": "URL parameter is required"}), 400
