@@ -15,10 +15,10 @@ const dummyServerResponse = `
 const fetchSimplifiedPage = async () => {
   try {
     // Request the initial / simplify version of article
-    // `http://127.0.0.1:5000/simplify?url=${window.location.href}
+    // `http://127.0.0.1:5000/simplify?url=${window.location.href}`
+    document.querySelector('#bodyContent').innerHTML = "<br><br>Loading...";
     const simplifiedResponse = await axios.get(`http://127.0.0.1:5000/simplify?url=${window.location.href}`)
-    console.log(`http://127.0.0.1:5000/simplify?url=${window.location.href}`)
-    console.log("simplified: ", simplifiedResponse)
+
 
     // Replace the DOM with simplified version of the article
     document.querySelector('#bodyContent').innerHTML = simplifiedResponse.data.content;
@@ -27,7 +27,8 @@ const fetchSimplifiedPage = async () => {
     document.querySelectorAll('.key').forEach((phrase: HTMLElement) => {
       phrase.onclick = async () => {
         phrase.style.fontWeight = "bold";
-        // fetchExpand();
+        phrase.id = "selected";
+        fetchExpand();
       };
       phrase.style.color = "black";
       phrase.style.backgroundColor = "gray";
@@ -43,12 +44,16 @@ const fetchExpand = async () => {
     // fetch the text content of the surrounding <p> tag that the key is in
     // const surroundingText = phrase.closest('p').innerHTML;
     // console.log(surroundingText);
-    const expandResponse = await axios.post('http://127.0.0.1:5000/expand', {
-      content: document.querySelector('#bodyContent').innerHTML
-    })
+    // const expandResponse = await axios.post('http://127.0.0.1:5000/expand', {
+    //   content: document.querySelector('#bodyContent').innerHTML
+    // })
+    const expandResponse = await axios.get('http://127.0.0.1:5000/status')
+    console.log("expand response: ", expandResponse)
 
     // Replace the DOM with expanded version of the article
     // TODO: pretty animations
+    document.querySelector(`#selected`).innerHTML = expandResponse.data.status
+    document.querySelector(`#selected`).id = ""
   }
   catch (e) {
     console.error(e)
