@@ -7,7 +7,21 @@ let tabs = [
   { id: "default", label: "Default" },
   { id: "talktohelp", label: "Talk2Help" }
 ]
-function DefaultTabContent() {
+function DefaultTabContent({
+  setLoading
+}: {
+  setLoading: (loading: boolean) => void
+}) {
+  const handleClick = async (event: any): Promise<void> => {
+    console.log("Clicked the simplify button!")
+    ///TODO: when waiting for a response from content create a "genereating simplifaication" screen with fade
+    setLoading(true)
+    // Simulate an async operation (e.g., API call)
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    setLoading(false)
+
+    window.close()
+  }
   return (
     <motion.div
       exit={{
@@ -24,6 +38,7 @@ function DefaultTabContent() {
         transition: { type: "spring", duration: 0.7 }
       }}>
       <button
+        onClick={handleClick}
         type="button"
         className="w-full inline-flex items-center px-10 py-2.5 text-sm font-medium text-center text-black bg-opacity-50 bg-sky-200 rounded-lg hover:bg-sky-400 focus:outline-none focus:ring-sky-300 dark:bg-sky-300 dark:hover:bg-sky-500 dark:focus:ring-sky-600 hover:bg-opacity-75 hover:backdrop-blur-md">
         Simplify Page
@@ -54,7 +69,11 @@ function TalkToHelpTabContent() {
   )
 }
 
-function AnimatedTabs() {
+function AnimatedTabs({
+  setLoading
+}: {
+  setLoading: (loading: boolean) => void
+}) {
   let [activeTab, setActiveTab] = useState(tabs[0].id)
 
   return (
@@ -83,7 +102,9 @@ function AnimatedTabs() {
         ))}
       </div>
       <motion.div className=" flex flex-col items-center justify-center pt-5 w-[275px]">
-        {activeTab === "default" && <DefaultTabContent />}
+        {activeTab === "default" && (
+          <DefaultTabContent setLoading={setLoading} />
+        )}
         {activeTab === "talktohelp" && <TalkToHelpTabContent />}
       </motion.div>
     </div>
@@ -91,6 +112,7 @@ function AnimatedTabs() {
 }
 
 export default function IndexPopup() {
+  const [loading, setLoading] = useState(false)
   return (
     <AnimatePresence>
       <motion.div
@@ -116,7 +138,37 @@ export default function IndexPopup() {
             borderRadius: 8
           }}>
           <div className="logo text-base font-medium py-2">Simple English</div>
-          <AnimatedTabs />
+          {loading ? (
+            <div className="flex flex-col items-center justify-center">
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{
+                    y: -20,
+                    opacity: 0,
+                    filter: "blur(5px)",
+                    transition: { ease: "easeIn", duration: 0.22 }
+                  }}
+                  transition={{ duration: 0.5 }}>
+                  <div className="loader"></div>
+                  <motion.div
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{
+                      delay: 0.5,
+                      duration: 1,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                      repeatType: "mirror"
+                    }}>
+                    <p>Generating Simplification...</p>
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          ) : (
+            <AnimatedTabs setLoading={setLoading} />
+          )}
         </div>
       </motion.div>
     </AnimatePresence>
