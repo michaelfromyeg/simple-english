@@ -290,7 +290,7 @@ def expand() -> Tuple[Response, int]:
         # AI generated expansion
         thread = client.beta.threads.create()
 
-        print("text_only_with_marked_key: ", text_only_with_marked_key)
+        # print("text_only_with_marked_key: ", text_only_with_marked_key)
         client.beta.threads.messages.create(
             thread_id=thread.id,
             role="user",
@@ -302,7 +302,7 @@ def expand() -> Tuple[Response, int]:
             assistant_id=EXPAND_ASSISTANT_ID,
         )
 
-        # print(f"Run for expand completed with status: {run.status}")
+        print(f"Run for expand completed with status: {run.status}")
 
         expanded_content = ""
         if run.status == "completed":
@@ -315,6 +315,7 @@ def expand() -> Tuple[Response, int]:
 
         soup = BeautifulSoup(expanded_content, "html.parser")
         generated_text = soup.find(id="fin").get_text()
+        
         print("expand output: ", generated_text)
         return jsonify({"content": generated_text}), 200
     except Exception as e:
