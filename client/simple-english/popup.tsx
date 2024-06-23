@@ -30,7 +30,7 @@ function DefaultTabContent() {
         transition: { type: "spring", duration: 0.7 }
       }}>
       <button
-        onClick={onClick}
+        onClick={handleClick}
         type="button"
         className="w-full inline-flex items-center px-10 py-2.5 text-sm font-medium text-center text-black bg-opacity-50 bg-blue-700 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 hover:bg-opacity-75 hover:backdrop-blur-md">
         Simplify Page
