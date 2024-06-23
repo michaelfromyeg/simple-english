@@ -103,11 +103,11 @@ export const fetchExpand = async (stream: boolean = false) => {
     console.log("expand response: ", expandResponse.data)
 
     // Create a new span element to replace the <a> "keyphrase" element
-    const spanElement = document.createElement('span');
-    spanElement.innerHTML = expandResponse.data.content;
+    const spanElement = document.createElement("span")
+    spanElement.innerHTML = expandResponse.data.content
 
     // Replace the <a> element with the new <span> element in the DOM
-    key_phrase.parentNode.replaceChild(spanElement, key_phrase);
+    key_phrase.parentNode.replaceChild(spanElement, key_phrase)
   } catch (error) {
     console.error(error)
   }
@@ -120,7 +120,7 @@ export const setupNewKeyWords = () => {
       fetchExpand()
     }
     phrase.style.color = "black"
-    phrase.style.backgroundColor = "aqua"
+    phrase.style.backgroundColor = getRandomColor()
   })
 }
 

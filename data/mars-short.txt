@@ -1,0 +1,35 @@
+<p><a class="key">Mars</a> is the fourth <a class="key">planet from the Sun</a>. It is known as the <a class="key">"Red Planet"</a> because its surface is covered with iron(III) oxide dust, which looks orange-red. Mars is one of the brightest objects in Earth's sky.</p>
+
+<ul>
+  <li>Diameter: 6,779 km (4,212 mi)</li>
+  <li>Day length: 24.5 hours</li>
+  <li>Year length: 1.88 Earth years (687 Earth days)</li>
+  <li>Moons: Phobos and Deimos</li>
+</ul>
+
+<p>Mars has flat plains in the north and cratered terrain in the south. This is known as the <a class="key">Martian dichotomy</a>.</p>
+
+<ul>
+  <li>Olympus Mons: The tallest volcano, 21.9 km (13.6 mi) high.</li>
+  <li>Valles Marineris: One of the largest canyons, 4,000 km (2,500 mi) long.</li>
+</ul>
+
+<p>Mars formed about 4.5 billion years ago. Its history can be split into three periods:</p>
+
+<ol>
+  <li><a class="key">Noachian</a> period: 4.5 to 3.5 billion years ago. Marked by meteor impacts and possible water.</li>
+  <li><a class="key">Hesperian</a> period: 3.5 to 2.9 billion years ago. Known for volcanic activity and large floods.</li>
+  <li><a class="key">Amazonian</a> period: 2.9 billion years ago to now. Dominated by wind.</li>
+</ol>
+
+<p>There is scientific interest in the possibility of life on Mars, both past and present.</p>
+
+<p>Since the late 20th century, Mars has been explored by many <a class="key">uncrewed spacecraft</a> and <a class="key">rovers</a>. The first flyby was by the Mariner 4 probe in 1965. Now, there are at least 11 active missions orbiting or on Mars.</p>
+
+<ul>
+  <li>Mariner 4: First flyby in 1965.</li>
+  <li>Mars 2: First orbit in 1971.</li>
+  <li>Viking 1: First landing in 1976.</li>
+</ul>
+
+<p>Mars may have had a ring system 3.5 to 4 billion years ago. It also may still have active geological processes like <a class="key">marsquakes</a> (earthquakes on Mars).</p>
