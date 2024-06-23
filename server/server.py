@@ -34,7 +34,9 @@ client = OpenAI(
 #     model="gpt-4o",
 # )
 
-ASSISTANT_ID = ""
+ASSISTANT_ID = "asst_pllDb28NQQGNfOzTN7mb9Ads"
+
+WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
 
 
 def url_to_wid(url: str) -> str:
@@ -52,7 +54,7 @@ def save_article(url: str, article: str) -> None:
     Save the HTML file of an article to disk.
     """
     wid = url_to_wid(url)
-    file_path = os.path.join("data", f"{wid}.html")
+    file_path = os.path.join("data", f"{wid}.txt")
 
     if os.path.isfile(file_path):
         return
@@ -68,7 +70,7 @@ def read_article(url: str) -> str | None:
     Read the article from disk, if it exists.
     """
     wid = url_to_wid(url)
-    file_path = os.path.join("data", f"{wid}.html")
+    file_path = os.path.join("data", f"{wid}.txt")
 
     if not os.path.isfile(file_path):
         return None
@@ -79,13 +81,11 @@ def read_article(url: str) -> str | None:
     return content
 
 
-def tidy_html(html: str) -> str:
+def tidy(html: str) -> str:
     """
     Tidy the HTML content of a Wikipedia article.
     """
     soup = BeautifulSoup(html, "html.parser")
-
-    WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
 
     body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
 
@@ -99,18 +99,12 @@ def tidy_html(html: str) -> str:
 
     text_content = body.get_text()
 
-    # Split the text into paragraphs
-    paragraphs = text_content.split("\n")
+    lines = text_content.split("\n")
+    lines_stripped = [line.strip() for line in lines]
+    non_empty_lines = [line for line in lines_stripped if line]
+    cleaned_text = "\n".join(non_empty_lines)
 
-    # Print each paragraph
-    for paragraph in paragraphs:
-        if paragraph.strip():
-            print(paragraph.strip())
-
-    if DEBUG:
-        print(text_content)
-
-    return text_content
+    return cleaned_text
 
 
 class EventHandler(AssistantEventHandler):
@@ -151,13 +145,15 @@ def simplify():
             if DEBUG:
                 print(f"Got response of {response.status_code} for {url}")
 
-            html_content = tidy_html(response.text)
+            html_content = tidy(response.text)
             save_article(url, html_content)
         except requests.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
     if html_content is None or not html_content:
         return jsonify({"error": "Couldn't get content for page"}), 500
+
+    # return jsonify({"status": "ok"})
 
     try:
         thread = client.beta.threads.create()
@@ -175,13 +171,12 @@ def simplify():
             instructions="Output the HTML.",
         )
 
-        print("Run completed with status: " + run.status)
+        print(f"Run for {url} completed with status: {run.status}")
 
         content = ""
         if run.status == "completed":
             messages = client.beta.threads.messages.list(thread_id=thread.id)
 
-            print("messages: ")
             for message in messages:
                 assert message.content[0].type == "text"
                 # print({"role": message.role, "message": message.content[0].text.value})
