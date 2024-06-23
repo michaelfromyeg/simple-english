@@ -253,7 +253,8 @@ def simplify() -> Tuple[Response, int]:
         return jsonify({"content": sanitized_content}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route("/expand", methods=["POST"])
 def expand() -> Tuple[Response, int]:
     """
@@ -261,18 +262,18 @@ def expand() -> Tuple[Response, int]:
     """
     data = request.get_json()
     html_content = data["content"]
-    
+
     # No caching first attempt
     try:
         # Strip paragraph and prepare prompt
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(html_content, "html.parser")
 
         # Extract the element with id "selected"
         selected_element = soup.find(id="selected")
 
         # If the selected element exists, replace it with a placeholder
         if selected_element:
-            placeholder = 'PLACEHOLDER_FOR_SELECTED'
+            placeholder = "PLACEHOLDER_FOR_SELECTED"
             selected_text = selected_element.get_text()
             selected_element.replace_with(placeholder)
 
@@ -282,7 +283,9 @@ def expand() -> Tuple[Response, int]:
         # Replace the placeholder back with the modified text
         if selected_element:
             replacement_text = f'"{selected_text}" (expand on this qouted keyword and keep the surrounding sentence exactly the same)'
-            text_only_with_marked_key = text_only_with_marked_key.replace(placeholder, replacement_text)
+            text_only_with_marked_key = text_only_with_marked_key.replace(
+                placeholder, replacement_text
+            )
 
         # AI generated expansion
         thread = client.beta.threads.create()
@@ -310,7 +313,7 @@ def expand() -> Tuple[Response, int]:
                 if message.role == "assistant":
                     expanded_content += message.content[0].text.value
 
-        soup = BeautifulSoup(expanded_content, 'html.parser')
+        soup = BeautifulSoup(expanded_content, "html.parser")
         generated_text = soup.find(id="fin").get_text()
         print("expand output: ", generated_text)
         return jsonify({"content": generated_text}), 200
@@ -318,6 +321,7 @@ def expand() -> Tuple[Response, int]:
         print("error: ", e)
         return jsonify({"error": str(e)}), 500
     return jsonify({"content": "return data"}), 200
+
 
 @app.errorhandler(404)
 def not_found_error(error):

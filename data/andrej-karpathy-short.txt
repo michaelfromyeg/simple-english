@@ -1,0 +1,7 @@
+<p><a class="key">Andrej Karpathy</a> (born 23 October 1986) is a Slovak-Canadian computer scientist. He was the director of <a class="key">artificial intelligence</a> and Autopilot Vision at Tesla. He co-founded and worked at <a class="key">OpenAI</a>, specializing in deep learning and computer vision.</p>
+
+<p>Karpathy was born in Bratislava, Czechoslovakia (now Slovakia) and moved to Toronto at age 15. He earned bachelor's degrees in Computer Science and Physics at the University of Toronto in 2009 and a master's degree at the University of British Columbia in 2011. He obtained a PhD from Stanford University in 2015, focusing on natural language processing and computer vision.</p>
+
+<p>At Stanford, Karpathy created and taught the first deep learning course, CS 231n: Convolutional Neural Networks for Visual Recognition. He joined OpenAI in 2015 as a research scientist. In June 2017, he became Tesla's director of artificial intelligence. He was named one of MIT Technology Review's Innovators Under 35 for 2020.</p>
+
+<p>Karpathy took a break from Tesla and left in July 2022. As of February 2023, he returned to OpenAI and also makes YouTube videos on artificial neural networks. In February 2024, an OpenAI spokesperson confirmed his departure from OpenAI.</p>

@@ -14,7 +14,7 @@ export const config: PlasmoCSConfig = {
   matches: ["https://*.wikipedia.org/*"]
 }
 
-export const fetchSimplifiedPage = async () => {
+export const fetchSimplifiedPage = async (stream: boolean = false) => {
   try {
     const body = document.querySelector("#bodyContent")
     // const body = document.querySelector("#mw-content-text")
@@ -25,36 +25,57 @@ export const fetchSimplifiedPage = async () => {
     }
 
     body.innerHTML = "<br><br>Loading..."
-    const simplifiedResponse = await axios.get(
+    const response = await axios.get(
       `${BASE_URL}/simplify?url=${window.location.href}`
     )
-    if (
-      simplifiedResponse?.status !== 200 ||
-      !simplifiedResponse?.data?.content
-    ) {
-      console.error(
-        `Failed to fetch; got status=${simplifiedResponse?.status}`,
-        { response: simplifiedResponse }
-      )
+    if (response?.status !== 200 || !response?.data?.content) {
+      console.error(`Failed to fetch; got status=${response?.status}`, {
+        response: response
+      })
       return
     }
 
-    body.innerHTML = simplifiedResponse.data.content
+    if (stream) {
+      // TODO(michaelfromyeg): naively stream `response.data.content` by rendering some tokens at a time
+      const content = response.data.content
+      const tokens = content.split(" ") // or use another delimiter if needed
+      body.innerHTML = "" // Clear the loading message
 
-    document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
-      phrase.onclick = async () => {
-        phrase.id = "selected"
-        fetchExpand()
-      }
-      phrase.style.color = "black"
-      phrase.style.backgroundColor = "aqua"
-    })
+      let index = 0
+      const interval = setInterval(() => {
+        if (index < tokens.length) {
+          body.innerHTML += tokens[index] + " "
+          index++
+        } else {
+          clearInterval(interval)
+          document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
+            phrase.onclick = async () => {
+              phrase.id = "selected"
+              fetchExpand()
+            }
+            phrase.style.color = "black"
+            phrase.style.backgroundColor = "aqua"
+          })
+        }
+      }, 100) // Adjust the interval delay as needed
+    } else {
+      body.innerHTML = response.data.content
+
+      document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
+        phrase.onclick = async () => {
+          phrase.id = "selected"
+          fetchExpand()
+        }
+        phrase.style.color = "black"
+        phrase.style.backgroundColor = "aqua"
+      })
+    }
   } catch (error) {
     console.error(error)
   }
 }
 
-export const fetchExpand = async () => {
+export const fetchExpand = async (stream: boolean = false) => {
   try {
     // fetch the text content of the surrounding <p> tag that the key is in
     const key_phrase = document.querySelector("#selected")
@@ -75,4 +96,4 @@ export const fetchExpand = async () => {
   }
 }
 
-fetchSimplifiedPage()
+fetchSimplifiedPage(true)
