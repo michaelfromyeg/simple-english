@@ -1,9 +1,11 @@
 import os
+import signal
+import sys
 
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from openai import AssistantEventHandler, OpenAI
 from typing_extensions import override
@@ -85,13 +87,28 @@ def tidy_html(html: str) -> str:
 
     body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
 
-    # TODO(michaelfromyeg): delete sections we don't want the LLM to parse
-    # e.g., references
+    h2_elements = soup.find_all("h2", class_=None)
+    for h2_element in h2_elements:
+        if h2_element.find("span", id="See_also"):
+            while h2_element:
+                next_element = h2_element.find_next_sibling()
+                h2_element.decompose()
+                h2_element = next_element
+
+    text_content = body.get_text()
+
+    # Split the text into paragraphs
+    paragraphs = text_content.split("\n")
+
+    # Print each paragraph
+    for paragraph in paragraphs:
+        if paragraph.strip():
+            print(paragraph.strip())
 
     if DEBUG:
-        print(body.prettify())
+        print(text_content)
 
-    return body.prettify()
+    return text_content
 
 
 class EventHandler(AssistantEventHandler):
@@ -115,7 +132,8 @@ def status():
 
 @app.route("/simplify", methods=["GET"])
 def simplify():
-    print("simplify with arg: ", request.args)
+    print("called GET /simplify with args: ", request.args)
+
     url = request.args.get("url")
     if not url:
         return jsonify({"error": "URL parameter is required"}), 400
@@ -149,16 +167,26 @@ def simplify():
         )
 
         # TODO(michaelfromyeg): replace this step with data in the actual response
-        def generate():
-            with client.beta.threads.runs.stream(
-                thread_id=thread.id,
-                assistant_id=assistant.id,
-                event_handler=EventHandler(),
-            ) as stream:
-                for message in stream:
-                    yield message
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=assistant.id,
+            instructions="Output the HTML.",
+        )
 
-        return Response(generate(), content_type="text/event-stream")
+        print("Run completed with status: " + run.status)
+
+        content = ""
+        if run.status == "completed":
+            messages = client.beta.threads.messages.list(thread_id=thread.id)
+
+            print("messages: ")
+            for message in messages:
+                assert message.content[0].type == "text"
+                # print({"role": message.role, "message": message.content[0].text.value})
+
+                if message.role == "assistant":
+                    content += message.content[0].text.value
+        return jsonify({"content": content}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -179,3 +207,12 @@ def internal_error(error):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+def signal_handler(sig, frame):
+    print("Received Ctrl+C - cleaning up...")
+    client.beta.assistants.delete(assistant.id)
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
