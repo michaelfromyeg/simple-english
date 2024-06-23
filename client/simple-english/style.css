@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.card {
+  padding: 1rem;
+  box-shadow:
+    rgb(56 63 95 / 16%) 0px 10px 36px 0px,
+    rgb(186 183 210 / 6%) 0px 0px 0px 1px;
+  border-radius: 0.75rem;
+  max-width: 20rem;
+}
+
+.card h2 {
+}
+
+.card img {
+  display: inline-block;
+  width: 100%;
+  object-fit: cover;
+  margin-top: 1rem;
+}
