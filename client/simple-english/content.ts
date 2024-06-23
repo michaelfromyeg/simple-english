@@ -51,7 +51,7 @@ export const fetchSimplifiedPage = async (stream: boolean = false) => {
     if (stream) {
       // TODO(michaelfromyeg): naively stream `response.data.content` by rendering some tokens at a time
       const content = response.data.content
-      const tokens = content.split(" ") // or use another delimiter if needed
+      const tokens = content.split("\n") // or use another delimiter if needed
       body.innerHTML = "" // Clear the loading message
 
       let index = 0
@@ -109,4 +109,4 @@ export const fetchExpand = async (stream: boolean = false) => {
   }
 }
 
-fetchSimplifiedPage(true)
+fetchSimplifiedPage(false)
