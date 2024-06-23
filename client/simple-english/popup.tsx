@@ -1,8 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
 
-// import { fetchSimplifiedPage } from "~content"
-
 import "./style.css"
 
 let tabs = [
@@ -10,10 +8,6 @@ let tabs = [
   { id: "talktohelp", label: "Talk2Help" }
 ]
 function DefaultTabContent() {
-  const handleClick = () => {
-    console.log("Clicked!")
-  }
-
   return (
     <motion.div
       exit={{
@@ -30,9 +24,8 @@ function DefaultTabContent() {
         transition: { type: "spring", duration: 0.7 }
       }}>
       <button
-        onClick={handleClick}
         type="button"
-        className="w-full inline-flex items-center px-10 py-2.5 text-sm font-medium text-center text-black bg-opacity-50 bg-blue-700 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 hover:bg-opacity-75 hover:backdrop-blur-md">
+        className="w-full inline-flex items-center px-10 py-2.5 text-sm font-medium text-center text-black bg-opacity-50 bg-sky-200 rounded-lg hover:bg-sky-400 focus:outline-none focus:ring-sky-300 dark:bg-sky-300 dark:hover:bg-sky-500 dark:focus:ring-sky-600 hover:bg-opacity-75 hover:backdrop-blur-md">
         Simplify Page
       </button>
     </motion.div>
@@ -73,7 +66,7 @@ function AnimatedTabs() {
             onClick={() => setActiveTab(tab.id)}
             className={`${
               activeTab === tab.id ? "" : "hover:text-black/60"
-            } relative rounded-full px-3 py-1.5 text-sm font-medium text-white outline-sky-400 transition focus-visible:outline-2`}
+            } relative rounded-full px-3 py-1.5 text-sm font-medium outline-sky-400 transition focus-visible:outline-2 ${activeTab === tab.id ? "text-white" : "text-gray-400 hover:text-gray-600"}`}
             style={{
               WebkitTapHighlightColor: "transparent"
             }}>
