@@ -253,7 +253,71 @@ def simplify() -> Tuple[Response, int]:
         return jsonify({"content": sanitized_content}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/expand", methods=["POST"])
+def expand() -> Tuple[Response, int]:
+    """
+    expand on a given key phrase
+    """
+    data = request.get_json()
+    html_content = data["content"]
+    
+    # No caching first attempt
+    try:
+        # Strip paragraph and prepare prompt
+        soup = BeautifulSoup(html_content, 'html.parser')
 
+        # Extract the element with id "selected"
+        selected_element = soup.find(id="selected")
+
+        # If the selected element exists, replace it with a placeholder
+        if selected_element:
+            placeholder = 'PLACEHOLDER_FOR_SELECTED'
+            selected_text = selected_element.get_text()
+            selected_element.replace_with(placeholder)
+
+        # Get the text only from the soup (this will remove all HTML tags)
+        text_only_with_marked_key = soup.get_text()
+
+        # Replace the placeholder back with the modified text
+        if selected_element:
+            replacement_text = f'"{selected_text}" (expand on this qouted keyword and keep the surrounding sentence exactly the same)'
+            text_only_with_marked_key = text_only_with_marked_key.replace(placeholder, replacement_text)
+
+        # AI generated expansion
+        thread = client.beta.threads.create()
+
+        expand_prompt = f"""This time, Don't change anything at all and give back an exact qoute of this string but expand on the qouted keyword: "{selected_text}", while keeping the surrounding sentence exactly the same. Make sure to make your expansion on the key word flow logically with the surrounding sentence. Within the expansion, make sure to wrap any interesting words in more "a" tags like before: <a class="key">(the word or phrase)</a>. Make sure to include at least 2 key phrases in this expansion. Make sure to wrap you expansion with a span tag that has an id of "fin" like so: <span id="fin">(expanded content)</span>. Here is the input text:\n\n\n{text_only_with_marked_key}"""
+        print("expand prompt: ", expand_prompt)
+        client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=expand_prompt,
+        )
+
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id,
+            assistant_id=ASSISTANT_ID,
+        )
+
+        print(f"Run for expand completed with status: {run.status}")
+
+        expanded_content = ""
+        if run.status == "completed":
+            messages = client.beta.threads.messages.list(thread_id=thread.id)
+
+            for message in messages:
+                assert message.content[0].type == "text"
+                if message.role == "assistant":
+                    expanded_content += message.content[0].text.value
+
+        soup = BeautifulSoup(expanded_content, 'html.parser')
+        generated_text = soup.find(id="fin").get_text()
+        print("expand output: ", generated_text)
+        return jsonify({"content": expanded_content}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"content": "return data"}), 200
 
 @app.errorhandler(404)
 def not_found_error(error):
