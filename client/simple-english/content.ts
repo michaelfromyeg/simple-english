@@ -26,7 +26,6 @@ const fetchSimplifiedPage = async () => {
 
     document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
       phrase.onclick = async () => {
-        phrase.style.fontWeight = "bold"
         phrase.id = "selected"
         fetchExpand()
       }
@@ -41,17 +40,18 @@ const fetchSimplifiedPage = async () => {
 const fetchExpand = async () => {
   try {
     // fetch the text content of the surrounding <p> tag that the key is in
-    // const surroundingText = phrase.closest('p').innerHTML;
-    // console.log(surroundingText);
-    // const expandResponse = await axios.post('http://127.0.0.1:5000/expand', {
-    //   content: document.querySelector('#bodyContent').innerHTML
-    // })
-    const expandResponse = await axios.get("http://127.0.0.1:5000/status")
-    console.log("expand response: ", expandResponse)
+    const key_phrase = document.querySelector("#selected")
+    const surroundingText = key_phrase.closest("p").innerHTML
+
+    const expandResponse = await axios.post(`${BASE_URL}/expand`, {
+      content: surroundingText
+    })
+
+    console.log("expand response: ", expandResponse.data)
 
     // Replace the DOM with expanded version of the article
     // TODO: pretty animations
-    document.querySelector(`#selected`).innerHTML = expandResponse.data.status
+    document.querySelector(`#selected`).innerHTML = expandResponse.data.content
     document.querySelector(`#selected`).id = ""
   } catch (error) {
     console.error(error)
