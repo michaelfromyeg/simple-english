@@ -1,6 +1,7 @@
 ### Custom
 
 env/
+.env
 
 ### Python.gitnogre
 

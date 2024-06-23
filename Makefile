@@ -1,3 +1,3 @@
 run-server:
 	@echo "Running server..."
-	@python -m server.scraper
+	@python -m server.server
