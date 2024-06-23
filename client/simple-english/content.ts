@@ -30,7 +30,6 @@ export const config: PlasmoCSConfig = {
 export const fetchSimplifiedPage = async (stream: boolean = false) => {
   try {
     const body = document.querySelector("#bodyContent")
-    // const body = document.querySelector("#mw-content-text")
 
     if (!body) {
       console.error("Couldn't find body element")
@@ -83,6 +82,7 @@ export const fetchSimplifiedPage = async (stream: boolean = false) => {
         phrase.style.backgroundColor = getRandomColor()
       })
     }
+    setupNewKeyWords()
   } catch (error) {
     console.error(error)
   }
@@ -90,23 +90,38 @@ export const fetchSimplifiedPage = async (stream: boolean = false) => {
 
 export const fetchExpand = async (stream: boolean = false) => {
   try {
-    // fetch the text content of the surrounding <p> tag that the key is in
-    const key_phrase = document.querySelector("#selected")
+    // Get the text content of the surrounding <p> tag that the key is in
+    const key_phrase = document.querySelector<HTMLElement>("#selected")
     const surroundingText = key_phrase.closest("p").innerHTML
+    key_phrase.innerHTML = "Loading..."
 
+    // Send a request to expand the text with this surrounding text
     const expandResponse = await axios.post(`${BASE_URL}/expand`, {
       content: surroundingText
     })
 
     console.log("expand response: ", expandResponse.data)
 
-    // Replace the DOM with expanded version of the article
-    // TODO: pretty animations
-    document.querySelector(`#selected`).innerHTML = expandResponse.data.content
-    document.querySelector(`#selected`).id = ""
+    // Create a new span element to replace the <a> "keyphrase" element
+    const spanElement = document.createElement('span');
+    spanElement.innerHTML = expandResponse.data.content;
+
+    // Replace the <a> element with the new <span> element in the DOM
+    key_phrase.parentNode.replaceChild(spanElement, key_phrase);
   } catch (error) {
     console.error(error)
   }
+}
+
+export const setupNewKeyWords = () => {
+  document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
+    phrase.onclick = async () => {
+      phrase.id = "selected"
+      fetchExpand()
+    }
+    phrase.style.color = "black"
+    phrase.style.backgroundColor = "aqua"
+  })
 }
 
 fetchSimplifiedPage(false)

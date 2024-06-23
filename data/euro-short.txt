@@ -1,0 +1,35 @@
+<p>The <a class="key">euro</a> (symbol: €; currency code: EUR) is the official <a class="key">currency</a> of 20 of the 27 member states of the European Union. This group is called the <a class="key">eurozone</a>. The euro is divided into 100 cents.</p>
+
+<p>The European Central Bank (ECB) manages the euro. The ECB and the national central banks of the eurozone countries together form the Eurosystem, which is responsible for euro policy, printing, and distribution.</p>
+
+<p>The euro is used by more than 200 million people worldwide. It is the second-largest reserve currency after the US dollar.</p>
+
+<p>Euro coins include €2, €1, 50c, 20c, 10c, 5c, 2c, and 1c. Banknotes come in €500, €200, €100, €50, €20, €10, and €5 denominations.</p>
+
+<p>The 20 eurozone members are:</p>
+<ul>
+  <li>Austria</li>
+  <li>Belgium</li>
+  <li>Croatia</li>
+  <li>Cyprus</li>
+  <li>Estonia</li>
+  <li>Finland</li>
+  <li>France</li>
+  <li>Germany</li>
+  <li>Greece</li>
+  <li>Ireland</li>
+  <li>Italy</li>
+  <li>Latvia</li>
+  <li>Lithuania</li>
+  <li>Luxembourg</li>
+  <li>Malta</li>
+  <li>Netherlands</li>
+  <li>Portugal</li>
+  <li>Slovakia</li>
+  <li>Slovenia</li>
+  <li>Spain</li>
+</ul>
+
+<p>Several small European territories, like Andorra and Vatican City, also use the euro through agreements. Montenegro and Kosovo use it unilaterally.</p>
+
+<p>Countries like Bulgaria, Czech Republic, and Poland are working to join the eurozone but have not adopted the euro yet.</p>

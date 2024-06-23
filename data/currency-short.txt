@@ -1,0 +1,28 @@
+<p><a class="key">Currency</a> is the money used in a country for trading goods and services.</p>
+
+<ul>
+  <li>A currency can be in the form of <a class="key">banknotes</a> or <a class="key">coins</a>.</li>
+  <li>Examples include the U.S. Dollar, Euro, and Japanese Yen.</li>
+  <li>Currency can be traded between nations to determine relative values.</li>
+</ul>
+
+<p>Currencies can be classified into three types:</p>
+<ul>
+  <li><a class="key">Fiat money</a>: Value guaranteed by the government.</li>
+  <li><a class="key">Commodity money</a>: Value from the material it's made of, like gold or silver.</li>
+  <li><a class="key">Representative money</a>: Backed by a physical asset.</li>
+</ul>
+
+<p>There are also <a class="key">digital currencies</a> like Bitcoin. These are not issued by a government and their value depends on the market.</p>
+
+<p>In history, currencies evolved from metal symbols to coins and then to paper money.</p>
+
+<ul>
+  <li>Early forms used metals to represent stored value.</li>
+  <li>Coins were made from valuable metals like gold, silver, and copper.</li>
+  <li>China introduced paper money over a long period, starting during the Tang dynasty.</li>
+</ul>
+
+<p>Modern paper money holds no intrinsic value but is trusted by people for trade. Some countries now use <a class="key">polymer banknotes</a>, which last longer and are harder to counterfeit.</p>
+
+<p>Today, most countries have a central bank that controls and issues their currency. Exchange rates determine the price at which different currencies can be traded against each other. These rates can be floating, determined by the market, or fixed by the government.</p>
