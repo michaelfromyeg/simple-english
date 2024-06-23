@@ -35,7 +35,8 @@
       "https://*.wikipedia.org/*"
     ],
     "permissions": [
-      "scripting"
+      "scripting",
+      "storage"
     ]
   }
 }
