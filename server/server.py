@@ -1,8 +1,10 @@
 import os
 
 import requests
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from openai import AssistantEventHandler, OpenAI
 from typing_extensions import override
 
@@ -11,6 +13,7 @@ load_dotenv()
 DEBUG = False
 
 app = Flask(__name__)
+CORS(app)
 
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
@@ -30,19 +33,80 @@ Your input will be valid HTML, and your output must also be valid HTML.""",
 )
 
 
+def url_to_wid(url: str) -> str:
+    """
+    Convert a Wikipedia URL to a (w)ID.
+    """
+    title = url.split("/wiki/")[-1]
+    wid = title.replace("_", "-").lower()
+
+    return wid
+
+
+def save_article(url: str, article: str) -> None:
+    """
+    Save the HTML file of an article to disk.
+    """
+    wid = url_to_wid(url)
+    file_path = os.path.join("data", f"{wid}.html")
+
+    if os.path.isfile(file_path):
+        return
+
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(article)
+
+    return None
+
+
+def read_article(url: str) -> str | None:
+    """
+    Read the article from disk, if it exists.
+    """
+    wid = url_to_wid(url)
+    file_path = os.path.join("data", f"{wid}.html")
+
+    if not os.path.isfile(file_path):
+        return None
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    return content
+
+
+def tidy_html(html: str) -> str:
+    """
+    Tidy the HTML content of a Wikipedia article.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
+
+    body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
+
+    # TODO(michaelfromyeg): delete sections we don't want the LLM to parse
+    # e.g., references
+
+    if DEBUG:
+        print(body.prettify())
+
+    return body
+
+
 class EventHandler(AssistantEventHandler):
     @override
     def on_text_created(self, text) -> None:
-        print("\nassistant > ", end="", flush=True)
+        print("", end="", flush=True)
 
     @override
-    def on_text_delta(self, delta, snapshot):
+    def on_text_delta(self, delta, snapshot) -> None:
         print(delta.value, end="", flush=True)
 
 
 @app.route("/status", methods=["GET"])
 def status():
-    return jsonify({"status": "Server is running"}), 200
+    return jsonify({"status": "up"}), 200
 
 
 @app.route("/simplify", methods=["GET"])
@@ -51,15 +115,18 @@ def simplify():
     if not url:
         return jsonify({"error": "URL parameter is required"}), 400
 
-    # Get the HTML content of the Wikipedia article
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        html_content = response.text
-        if DEBUG:
-            print(f"{html_content=}")
-    except requests.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+    # first, get the article contents
+    # checks an on-disk cache first (so we don't get rate-limited, or something)
+    html_content = read_article(url)
+    if html_content is None:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+
+            html_content = tidy_html(html_content)
+            save_article(url, html_content)
+        except requests.RequestException as e:
+            return jsonify({"error": str(e)}), 500
 
     try:
         thread = client.beta.threads.create()
@@ -67,9 +134,10 @@ def simplify():
         client.beta.threads.messages.create(
             thread_id=thread.id,
             role="user",
-            content="<p><i><b>Hockey</b></i> is a term used to denote a family of various types of both summer and winter team sports which originated on either an outdoor field, sheet of ice, or dry floor such as in a gymnasium. While these sports vary in specific rules, numbers of players, apparel, and playing surface, they share broad characteristics of two opposing teams using a stick to propel a ball or disk into a goal. </p>",
+            content=html_content,
         )
 
+        # TODO(michaelfromyeg): replace this step with data in the actual response
         with client.beta.threads.runs.stream(
             thread_id=thread.id,
             assistant_id=assistant.id,
