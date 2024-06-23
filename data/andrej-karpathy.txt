@@ -1,0 +1,146 @@
+Czechoslovak-born AI researcher (born 1986)
+Andrej Karpathy (born 23 October 1986[2]) is a Slovak-Canadian computer scientist who served as the director of artificial intelligence and Autopilot Vision at Tesla. He co-founded and formerly worked at OpenAI,[3][4][5] where he specialized in deep learning and computer vision.[6][7][1][8]
+Education and early life[edit]
+Karpathy was born in Bratislava, Czechoslovakia (now Slovakia)[9][10][11][12] and moved with his family to Toronto when he was 15.[13] He completed his Computer Science and Physics bachelor's degrees at University of Toronto in 2009[14] and his master's degree at University of British Columbia in 2011,[14] where he worked on physically-simulated figures (for example, a simulated runner or a simulated person in a crowd).
+Karpathy received a PhD from Stanford University in 2015 under the supervision of Fei-Fei Li, focusing on the intersection of natural language processing and computer vision, and deep learning models suited for this task.[15][16]
+Career and research[edit]
+He authored and was the primary instructor of the first deep learning course at Stanford, CS 231n: Convolutional Neural Networks for Visual Recognition.[17] It became one of the largest classes at Stanford, growing from 150 students in 2015 to 750 in 2017.[18]
+Karpathy is a founding member of the artificial intelligence research group OpenAI,[19][20] where he was a research scientist from 2015 to 2017.[18] In June 2017 he became Tesla's director of artificial intelligence and reported to Elon Musk.[21][7][22] He was named one of MIT Technology Review's Innovators Under 35 for 2020.[23] After taking a several months-long sabbatical from Tesla, he announced he was leaving the company in July 2022.[24] As of February 2023, he makes YouTube videos on how to create artificial neural networks.[25]
+It was reported on February 9 2023 that Karpathy had announced he was returning to OpenAI.[26]
+A year later on February 13 2024, an OpenAI spokesperson confirmed that Karpathy had left OpenAI. [27]
+References[edit]
+^ a b Andrej Karpathy publications indexed by Google Scholar
+^ "Self-reported on twitter". Archived from the original on 23 August 2021. Retrieved 25 April 2019.
+^ "Tesla's Autopilot chief steps down after two years". 26 April 2018. Retrieved 9 August 2018.
+^ Metz, Cade (7 November 2017). "A.I. Researchers Leave Elon Musk Lab to Begin Robotics Start-Up". The New York Times. Retrieved 9 August 2018.
+^ Metz, Cade (19 April 2017). "A.I. Researchers Are Making More Than $1 Million, Even at a Nonprofit". The New York Times. Retrieved 9 August 2018.
+^ "The Guy Who Taught AI to 'Remember' Is Launching a Startup". 28 July 2018. Retrieved 9 August 2018.
+^ a b "Elon Musk has poached a top mind in AI research—from himself". 21 June 2017. Retrieved 9 August 2018.
+^ Andrej Karpathy on Medium
+^ "The Slovak, who leads the development of AI at Tesla, is leaving. It was an honor, says Musk – Živé.sk". 14 July 2022. Retrieved 19 July 2022.
+^ Živé.sk (25 June 2020). "Šéf AI v Tesle: Rodák zo Slovenska je medzi TOP 35 mladými novátormi". Živé.sk (in Slovak). Retrieved 19 July 2022.
+^ today, newsy (28 March 2022). "The Slovak, who leads AI in Tesla, left the company for several months. He jokes with Musk about TikTok". Newsy Today. Retrieved 19 July 2022.[permanent dead link]
+^ "Slovák Andrej Karpathy z Tesly patrí podľa MIT medzi 35 top inovátorov". TeslaMagazin.sk (in Slovak). 23 June 2020. Retrieved 19 July 2022.
+^ "Next Generation Machine Learning - Training Deep Learning Models in a Browser: Andrej Karpathy Interview | DataScienceWeekly.org". DataScienceWeekly.org. Retrieved 12 November 2018.
+^ a b "Andrej Karpathy Academic Website". cs.stanford.edu. Retrieved 12 November 2018.
+^ Karpathy, Andrej (2016). Connecting Images and Natural Language. stanford.edu (PhD thesis). Stanford University.
+^ "Does 'robo-journalism' pose a threat to reporters?". 23 March 2017. Retrieved 9 August 2018.
+^ "Stanford University CS231n: Convolutional Neural Networks for Visual Recognition". cs231n.stanford.edu. Retrieved 8 September 2022.
+^ a b "Andrej Karpathy". karpathy.ai. Retrieved 8 September 2022.
+^ "Introducing OpenAI". OpenAI. 12 December 2015. Retrieved 8 September 2022.
+^ Fan, Shelly (20 December 2015). "Inside OpenAI: Will Transparency Protect Us From Artificial Intelligence Run Amok?". Singularity Hub. Retrieved 8 September 2022.
+^ Etherington, Darrell (21 June 2017). "Tesla hires deep learning expert Andrej Karpathy to lead Autopilot vision". TechCrunch. Retrieved 10 November 2023.
+^ "Tesla hired a top AI expert to lead a critical aspect of Autopilot -- here's what we know". 22 June 2017. Retrieved 9 August 2018.
+^ "Andrej Karpathy (Innovators Under 35 2020)". MIT Technology Review. Retrieved 8 September 2022.
+^ Kolodny, Lora (13 July 2022). "Tesla AI leader Andrej Karpathy announces he's leaving the company". CNBC. Retrieved 14 July 2022.
+^ "Andrej Karpathy - YouTube". youtube.com. Retrieved 4 February 2023.
+^ @karpathy (9 February 2023). "Some personal news: I am joining OpenAI (again :)). Like many others both in/out of AI, I am very inspired by the impact of their work and I have personally benefited greatly from it. The future potential is especially exciting; it is a great pleasure to jump back in and build!🪄" (Tweet) – via Twitter.
+^ "OpenAI Researcher Andrew Karpathy Departs". 13 February 2024. Retrieved 13 February 2024.
+vteTesla, Inc.ElectricvehiclesCurrent
+Cybertruck
+Model 3
+Model S
+Model X
+Model Y
+Semi
+Future
+Cyberquad
+Roadster (2nd gen.)
+Next-generation vehicle (Robotaxi)
+Discontinued
+Roadster (1st gen.)
+Joint projects
+Cyberquad for Kids
+Mercedes
+A-Class
+B-Class
+Smart Fortwo ED
+Toyota RAV4 EV (2nd gen.)
+Tesla EnergyCharging
+Megacharger
+North American Charging Standard (NACS)
+Supercharger
+Storage
+Megapack
+Powerwall
+Powerpack (discontinued)
+Solar
+Solar panels
+Solar Roof
+ArtificialintelligenceRobotics
+Optimus (robot)
+Supercomputers
+Tesla Dojo
+ADAS
+Tesla Autopilot (Tesla Autopilot hardware)
+Factories
+Berlin
+Fremont
+Mexico (future)
+Nevada
+New York
+Shanghai
+Texas
+Tilburg
+PeopleExecutives
+Elon Musk (CEO)
+Robyn Denholm (Chair)
+Vaibhav Taneja (CFO)
+Tom Zhu (SVP of automotive)
+Others
+Franz von Holzhausen (Chief Designer)
+Joe Gebbia (board)
+James Murdoch (board)
+Kimbal Musk (board)
+J. B. Straubel (board, co-founder)
+Kathleen Wilson-Thompson (board)
+Former
+Deepak Ahuja (two-time CFO)
+Drew Baglino (SVP of engineering)
+Ze'ev Drori (CEO)
+Martin Eberhard (co-founder, CEO)
+Larry Ellison (board)
+Steve Jurvetson (board)
+Andrej Karpathy (AI)
+Zach Kirkhorn (CFO)
+Arnnon Geshuri (HR)
+Jérôme Guillen (automotive)
+Jim Keller (Autopilot)
+Chris Lattner (Autopilot)
+Hiromichi Mizuno (board)
+Marc Tarpenning (co-founder, CFO)
+Jay Vijayan (CIO)
+Controversies
+Criticism of Tesla
+Dealership disputes
+Lawsuits (list)
+Owen Diaz v. Tesla
+List of Tesla Autopilot crashes
+TSLAQ
+Related
+History
+DeepScale
+Easter eggs in products
+Giga Press
+Hibar Systems
+Hornsdale Power Reserve
+Maxwell Technologies (divested)
+SolarCity (merged into Tesla Energy)
+Tesla Automation
+Tesla battery station
+Tesla Roadster in space
+Tesla and unions
+Zep Solar (merged into Tesla Energy)
+Category
+Authority control databases International
+VIAF
+National
+Germany
+Academics
+Association for Computing Machinery
+DBLP
+Google Scholar
+MathSciNet
+Mathematics Genealogy Project
+Scopus
+Retrieved from "https://en.wikipedia.org/w/index.php?title=Andrej_Karpathy&oldid=1227331016"

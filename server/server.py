@@ -1,3 +1,29 @@
+"""
+The backend for simplifying and expanding Wikipedia articles/
+
+Simplify prompt.
+
+```
+You are a human encyclopedia, with expertise on all of the world's knowledge.
+You will be given an article from Wikipedia, as messy plain text.
+Your job is to produce a version of the article in "Keyed Simple English", in simple HTML. "Keyed Simple English" is a language mode with a shorter overall length, shorter sentences, simpler words, and keyed words or phrases. Concepts are distilled and only the most important details are kept. Aim for a reading level of around sixth grade. Wrap interesting words or phrases in the simplified article with <a class="key">(the word or phrase)</a>. Include at least 3 key phrases in the entire article.
+
+In your version, you will output the simplified article in HTML (using only the following tags: <p>, <ul>, <ol>, <li>, and <a>), with no additional styles.
+
+Here is an an example, from the Wikipedia article for soccer.
+English: ```The game of association football is played in accordance with the Laws of the Game, a set of rules that has been in effect since 1863 and maintained by the IFAB since 1886. The game is played with a football that is 68-70in circumference. The two teams compete to get the ball into the other team's goal (between the posts, under the bar, and across the goal line), thereby scoring a goal. When the ball is in play, the players mainly use their feet, but may use any other part of their body, except for their hands or arms, to control, strike, or pass the ball. Only the goalkeepers may use their hands and arms, and only then within the penalty area. The team that has scored more goals at the end of the game is the winner. There are situations where a goal can be disallowed, such as an offside call or a foul in the build-up to the goal. Depending on the format of the competition, an equal number of goals scored may result in a draw being declared, or the game goes into extra time or a penalty shoot-out.```
+Simple English: ```<p>Games like <a class="key">football</a> have been played around the world since ancient times. The game came from <a class="key">England</a>, where the <a class="key">Football Association</a> wrote a standard set of rules for the game in 1863.</p>```
+
+Your input will be messy plaintext, and your output will be "Keyed Simple English" with only the following tags: <p>, <ul>, <ol>, <li>, and <a>.
+```
+
+Expand prompt.
+
+```
+TODO(michaelfromyeg): write!
+```
+"""
+
 import os
 import signal
 import sys
@@ -34,7 +60,9 @@ client = OpenAI(
 #     model="gpt-4o",
 # )
 
-ASSISTANT_ID = ""
+ASSISTANT_ID = "asst_pllDb28NQQGNfOzTN7mb9Ads"
+
+WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
 
 
 def url_to_wid(url: str) -> str:
@@ -52,7 +80,7 @@ def save_article(url: str, article: str) -> None:
     Save the HTML file of an article to disk.
     """
     wid = url_to_wid(url)
-    file_path = os.path.join("data", f"{wid}.html")
+    file_path = os.path.join("data", f"{wid}.txt")
 
     if os.path.isfile(file_path):
         return
@@ -68,7 +96,7 @@ def read_article(url: str) -> str | None:
     Read the article from disk, if it exists.
     """
     wid = url_to_wid(url)
-    file_path = os.path.join("data", f"{wid}.html")
+    file_path = os.path.join("data", f"{wid}.txt")
 
     if not os.path.isfile(file_path):
         return None
@@ -79,17 +107,15 @@ def read_article(url: str) -> str | None:
     return content
 
 
-def tidy_html(html: str) -> str:
+def tidy(html: str) -> str:
     """
     Tidy the HTML content of a Wikipedia article.
     """
     soup = BeautifulSoup(html, "html.parser")
 
-    WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
-
     body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
 
-    h2_elements = soup.find_all("h2", class_=None)
+    h2_elements = body.find_all("h2", class_=None)
     for h2_element in h2_elements:
         if h2_element.find("span", id="See_also"):
             while h2_element:
@@ -97,20 +123,18 @@ def tidy_html(html: str) -> str:
                 h2_element.decompose()
                 h2_element = next_element
 
+    infobox = body.find("table", class_="infobox")
+    if infobox:
+        infobox.decompose()
+
     text_content = body.get_text()
 
-    # Split the text into paragraphs
-    paragraphs = text_content.split("\n")
+    lines = text_content.split("\n")
+    lines_stripped = [line.strip() for line in lines]
+    non_empty_lines = [line for line in lines_stripped if line]
+    cleaned_text = "\n".join(non_empty_lines)
 
-    # Print each paragraph
-    for paragraph in paragraphs:
-        if paragraph.strip():
-            print(paragraph.strip())
-
-    if DEBUG:
-        print(text_content)
-
-    return text_content
+    return cleaned_text
 
 
 class EventHandler(AssistantEventHandler):
@@ -151,13 +175,15 @@ def simplify():
             if DEBUG:
                 print(f"Got response of {response.status_code} for {url}")
 
-            html_content = tidy_html(response.text)
+            html_content = tidy(response.text)
             save_article(url, html_content)
         except requests.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
     if html_content is None or not html_content:
         return jsonify({"error": "Couldn't get content for page"}), 500
+
+    # return jsonify({"status": "ok"})
 
     try:
         thread = client.beta.threads.create()
@@ -172,16 +198,14 @@ def simplify():
         run = client.beta.threads.runs.create_and_poll(
             thread_id=thread.id,
             assistant_id=ASSISTANT_ID,
-            instructions="Output the HTML.",
         )
 
-        print("Run completed with status: " + run.status)
+        print(f"Run for {url} completed with status: {run.status}")
 
         content = ""
         if run.status == "completed":
             messages = client.beta.threads.messages.list(thread_id=thread.id)
 
-            print("messages: ")
             for message in messages:
                 assert message.content[0].type == "text"
                 # print({"role": message.role, "message": message.content[0].text.value})
