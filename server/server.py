@@ -282,7 +282,8 @@ def expand() -> Tuple[Response, int]:
 
         # Replace the placeholder back with the modified text
         if selected_element:
-            replacement_text = f'"{selected_text}" (expand on this qouted keyword and keep the surrounding sentence exactly the same)'
+            # replacement_text = f'"{selected_text}" (expand on this qouted keyword and keep the surrounding sentence exactly the same)'
+            replacement_text = f'"{selected_text}"'
             text_only_with_marked_key = text_only_with_marked_key.replace(
                 placeholder, replacement_text
             )
@@ -314,10 +315,16 @@ def expand() -> Tuple[Response, int]:
                     expanded_content += message.content[0].text.value
 
         soup = BeautifulSoup(expanded_content, "html.parser")
-        generated_text = soup.find(id="fin").get_text()
-        
-        print("expand output: ", generated_text)
-        return jsonify({"content": generated_text}), 200
+        generated_text = soup.find(id="fin")
+
+        inner_generated_text = "".join(
+            str(element) for element in generated_text.contents
+        )
+
+        print("generated_text: ", generated_text)
+        print("inner_generated_text", inner_generated_text)
+
+        return jsonify({"content": inner_generated_text}), 200
     except Exception as e:
         print("error: ", e)
         return jsonify({"error": str(e)}), 500

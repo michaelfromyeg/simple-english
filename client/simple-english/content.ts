@@ -108,6 +108,8 @@ export const fetchExpand = async (stream: boolean = false) => {
 
     // Replace the <a> element with the new <span> element in the DOM
     key_phrase.parentNode.replaceChild(spanElement, key_phrase)
+
+    setupNewKeyWords()
   } catch (error) {
     console.error(error)
   }
