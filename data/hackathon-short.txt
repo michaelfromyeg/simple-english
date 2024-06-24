@@ -1,0 +1,30 @@
+<p>A <a class="key">hackathon</a> is an event where people build software fast. It usually lasts 24–48 hours.</p>
+
+<p>People at hackathons use <a class="key">agile methods</a> to create software. This includes <a class="key">programmers</a>, designers, and other experts.</p>
+
+<p>The goal is to make working software or hardware by the end.</p>
+
+<p>Hackathons can focus on a specific <a class="key">programming language</a>, application, or theme. Sometimes, there are no restrictions on what can be created.</p>
+
+<p>Participants can learn new skills and build things quickly. Some hackathons lead to new companies and communities.</p>
+
+<p><strong>Etymology:</strong> The word "hackathon" combines "hack" (for programming) and "marathon" (for running long).</p>
+
+<p>Hackathons often start with talks or web pages explaining the event. Teams then code and build their projects. Food and sleep can be informal, with many eating pizza and drinking energy drinks.</p>
+
+<p>At the end, teams show their work. There can be contests with judges and prizes.</p>
+
+<p>Some hackathons focus on different areas:</p>
+
+<ul>
+  <li>Specific <a class="key">applications</a> like mobile apps or video games.</li>
+  <li>Using a specific <a class="key">API</a> or programming language.</li>
+  <li>Supporting a cause, like open government or social issues.</li>
+  <li>For certain groups, like students or women.</li>
+</ul>
+
+<p>Some hackathons are for internal company use to inspire innovation.</p>
+
+<p>There are also "code sprints" for single projects, especially in <a class="key">open source</a> software.</p>
+
+<p>However, some criticize hackathons for not always creating lasting solutions.</p>
