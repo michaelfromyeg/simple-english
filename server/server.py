@@ -76,6 +76,10 @@ def url_to_wid(url: str) -> str:
     title = url.split("/wiki/")[-1]
     wid = title.replace("_", "-").lower()
 
+    # remove any query parameters
+    if "?" in wid:
+        wid = wid.split("?")[0]
+
     return wid
 
 

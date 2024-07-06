@@ -3,39 +3,49 @@ import axios from "axios"
 import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
 
-const storage = new Storage()
+import { BASE_URL, StorageKey } from "~constants"
+import { chromeStorageSyncGet } from "~helpers"
 
-console.log("hello!")
+const storage = new Storage({
+  copiedKeyList: ["shield-modulation"]
+})
 
-const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
-  console.log("Simplify message received")
-  await storage.setItem("simplified_content", "Loading...")
-  const currentUrl = await storage.getItem("current_url")
+const handler: PlasmoMessaging.MessageHandler = async (request, response) => {
+  const tokenObject = await chromeStorageSyncGet(StorageKey.OPENAI_TOKEN)
+  const token = tokenObject[StorageKey.OPENAI_TOKEN]
+  if (!token) {
+    console.error("No OpenAI token found!")
 
-  if (!currentUrl) {
-    console.error("No current url found")
+    response.send("error")
     return
   }
 
-  const BASE_URL = await storage.getItem("endpoint_url")
-  console.log("Current URL: ", currentUrl)
-  const message = await axios.get(`${BASE_URL}/simplify?url=${currentUrl}`)
+  const windowUrl = await storage.getItem(StorageKey.WINDOW_URL)
+  if (!windowUrl) {
+    console.error("No window URL found!")
 
+    response.send("error")
+    return
+  }
+
+  const message = await axios.get(
+    `${BASE_URL}/simplify?url=${windowUrl}&token=${token}`
+  )
   if (message?.status !== 200 || !message?.data?.content) {
     console.error(`Failed to fetch; got status=${message?.status}`, {
       response: message
     })
+
+    response.send("error")
     return
   }
 
-  console.log("Simplified content: ", message.data.content)
-  storage.setItem("simplified_content", message.data.content)
-}
+  // for some reason, putting the enum value here makes things break
+  // ...I need to investigate
+  console.log("Setting body content...")
+  await storage.setItem("bodyContent", message.data.content)
 
-storage.watch({
-  current_url: ({ newValue }) => {
-    console.log("Current URL changed to: ", newValue)
-  }
-})
+  response.send("ok")
+}
 
 export default handler

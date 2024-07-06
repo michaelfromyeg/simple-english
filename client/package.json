@@ -2,8 +2,8 @@
   "name": "simple-english",
   "displayName": "Simple english",
   "version": "0.0.1",
-  "description": "simple english",
-  "author": "Plasmo Corp. <foss@plasmo.com>",
+  "description": "The interface for the Simple English project.",
+  "author": "Michael DeMarco <michaelfromyeg@gmail.com>",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -37,7 +37,8 @@
     ],
     "permissions": [
       "scripting",
-      "storage"
+      "storage",
+      "unlimitedStorage"
     ]
   }
 }

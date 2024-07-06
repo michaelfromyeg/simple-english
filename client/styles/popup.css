@@ -1,0 +1,25 @@
+.button {
+  width: 100px;
+  height: 32px;
+  font-size: 16px;
+  padding: 4px;
+  margin: 8px;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: "Times New Roman", Times, serif;
+  cursor: pointer;
+}
+
+.button.loading {
+  background-color: gray;
+}
+
+.button.done {
+  background-color: green;
+}
+
+.button.error {
+  background-color: red;
+}

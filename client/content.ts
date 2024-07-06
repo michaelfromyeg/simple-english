@@ -3,154 +3,104 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { Storage } from "@plasmohq/storage"
 
-const BASE_URL = "http://127.0.0.1:5000"
-const storage = new Storage()
+import { BASE_URL, StorageKey } from "~constants"
+import { chromeStorageSyncGet, getRandomColor } from "~helpers"
 
-const updateUrls = async () => {
-  console.log(BASE_URL, window.location.href)
-  const endpoint_url_res = await storage.set("endpoint_url", BASE_URL)
-  const endpoint_url_res2 = await storage.set("endpoint_url", BASE_URL)
-  const current_url_res = await storage.set("current_url", window.location.href)
-  console.log("Res", endpoint_url_res, current_url_res)
-  console.log("Updated current url to: ", window.location.href)
-  // saniry check
-  console.log("Current URL: ", await storage.get("current_url"))
-}
+const storage = new Storage({
+  copiedKeyList: ["shield-modulation"]
+})
 
-updateUrls()
-
-// Send a request to simplify with current url - server responds with short summary
-const MOCK_SERVER_RESPONSE = `
-    Europe is a continent located entirely in the Northern Hemisphere and mostly in the Eastern Hemisphere. It is bordered by the Arctic Ocean to the north, the Atlantic Ocean to the west, Asia to the east, and the Mediterranean Sea to the south.
-    Europe is known for its rich history and diverse cultures. It is home to many famous landmarks such as the Eiffel Tower in Paris, the Colosseum in Rome, and the Acropolis in Athens.
-    Some key phrases about Europe include <a class="key">continent</a>, <a class="key">diverse cultures</a>, and <a class="key">famous landmarks</a>.
-`
-
-const colors = [
-  "#6B97C7",
-  "#A4C76B",
-  "#E4D395",
-  "#E7B1E5",
-  "#B1CDE7",
-  "#CF9BE7"
-]
-
-function getRandomColor() {
-  return colors[Math.floor(Math.random() * colors.length)]
-}
-
+/**
+ * Configuration for the content script.
+ *
+ * Only runs on Wikipedia pages, excluding simple.wikipedia.org.
+ */
 export const config: PlasmoCSConfig = {
-  matches: ["https://*.wikipedia.org/*"]
+  matches: ["*://*.wikipedia.org/wiki/*"],
+  exclude_matches: ["*://simple.wikipedia.org/wiki/*"]
 }
 
-export const fetchSimplifiedPage = async (stream: boolean = false) => {
+/**
+ * Expand the selected keyword by sending a request to the server
+ * and replacing the HTML content appropriately.
+ */
+export const expandKeyword = async (stream: boolean = false) => {
   try {
-    const body = document.querySelector("#bodyContent")
-
-    if (!body) {
-      console.error("Couldn't find body element")
+    const tokenObject = await chromeStorageSyncGet(StorageKey.OPENAI_TOKEN)
+    const token = tokenObject[StorageKey.OPENAI_TOKEN]
+    if (!token) {
+      console.error("No OpenAI token found!")
       return
     }
 
-    body.innerHTML = "<br><br>Loading..."
-    const response = await axios.get(
-      `${BASE_URL}/simplify?url=${window.location.href}`
+    const keyword = document.querySelector<HTMLElement>("#selected")
+    const surroundingText = keyword.closest("p").innerHTML
+
+    keyword.onclick = () => {}
+
+    const expandResponse = await axios.post(
+      `${BASE_URL}/expand?token=${token}`,
+      {
+        content: surroundingText
+      }
     )
-    if (response?.status !== 200 || !response?.data?.content) {
-      console.error(`Failed to fetch; got status=${response?.status}`, {
-        response: response
-      })
-      return
-    }
 
-    if (stream) {
-      // TODO(michaelfromyeg): naively stream `response.data.content` by rendering some tokens at a time
-      const content = response.data.content
-      const tokens = content.split("\n") // or use another delimiter if needed
-      body.innerHTML = "" // Clear the loading message
-
-      let index = 0
-      const interval = setInterval(() => {
-        if (index < tokens.length) {
-          body.innerHTML += tokens[index] + " "
-          index++
-        } else {
-          clearInterval(interval)
-          document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
-            phrase.onclick = async () => {
-              phrase.id = "selected"
-              fetchExpand()
-            }
-            phrase.style.color = "black"
-            phrase.style.backgroundColor = getRandomColor()
-          })
-        }
-      }, 100) // Adjust the interval delay as needed
-    } else {
-      body.innerHTML = response.data.content
-
-      document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
-        phrase.onclick = async () => {
-          phrase.id = "selected"
-          fetchExpand()
-        }
-        phrase.style.color = "black"
-        phrase.style.backgroundColor = getRandomColor()
-      })
-    }
-    setupNewKeyWords()
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-export const fetchExpand = async (stream: boolean = false) => {
-  try {
-    // Get the text content of the surrounding <p> tag that the key is in
-    const key_phrase = document.querySelector<HTMLElement>("#selected")
-    const surroundingText = key_phrase.closest("p").innerHTML
-    key_phrase.innerHTML = "Loading..."
-
-    // Send a request to expand the text with this surrounding text
-    const expandResponse = await axios.post(`${BASE_URL}/expand`, {
-      content: surroundingText
-    })
-
-    console.log("expand response: ", expandResponse.data)
-
-    // Create a new span element to replace the <a> "keyphrase" element
+    // Create a new span element to replace the <a> `selectedPhrase` element
     const spanElement = document.createElement("span")
     spanElement.innerHTML = expandResponse.data.content
 
     // Replace the <a> element with the new <span> element in the DOM
-    key_phrase.parentNode.replaceChild(spanElement, key_phrase)
+    keyword.parentNode.replaceChild(spanElement, keyword)
 
-    setupNewKeyWords()
+    // register new key words identified in the LLM response
+    registerNewKeywords()
   } catch (error) {
-    console.error(error)
+    console.error("An error occurred while trying to expand the text", error)
+
+    // reset the onclick handler if an error occurred
+    const keyword = document.querySelector<HTMLElement>("#selected")
+    keyword.onclick = () => {
+      keyword.id = "selected"
+      expandKeyword()
+    }
   }
 }
 
-export const setupNewKeyWords = () => {
+/**
+ * Traverse all the key phrases in the content and register them for expansion
+ * (with the appropriate onclick handler and CSS).
+ */
+const registerNewKeywords = () => {
   document.querySelectorAll(".key").forEach((phrase: HTMLElement) => {
     phrase.onclick = async () => {
       phrase.id = "selected"
-      fetchExpand()
+      expandKeyword()
     }
     phrase.style.color = "black"
+
+    // TODO(michaelfromyeg): instead of a random color, use progressively darker shades
+    // (...representing the depths of the query)
     phrase.style.backgroundColor = getRandomColor()
   })
 }
 
-// fetchSimplifiedPage(false)
-// fetchSimplifiedPage()
-
+// watch for changes in the body content; update as necessary
 storage.watch({
-  simplified_content: ({ newValue: simplifiedContent }) => {
-    console.log("Rendering simplified content...", simplifiedContent)
-    const body = document.querySelector("#bodyContent")
-    body.innerHTML = simplifiedContent
+  bodyContent: ({ newValue }) => {
+    console.log("Updating body content with new value!")
 
-    setupNewKeyWords()
+    const body = document.querySelector("#bodyContent")
+    body.innerHTML = newValue
+
+    registerNewKeywords()
   }
 })
+
+// TODO(michaelfromyeg): see if this can come as an argument from `sendToBackground` instead
+const updateUrls = async () => {
+  await storage.set(StorageKey.WINDOW_URL, window.location.href)
+}
+
+updateUrls()
+
+console.log("Content script loaded!")
