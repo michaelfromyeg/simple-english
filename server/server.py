@@ -44,10 +44,6 @@ DEBUG = True
 app = Flask(__name__)
 CORS(app)
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
-
 # NOTE: this creates an assistant programatically; maybe there's a way to just 'update' one
 # ...use it sparingly
 
@@ -64,9 +60,32 @@ client = OpenAI(
 #     model="gpt-4o",
 # )
 
-ASSISTANT_ID = "asst_pllDb28NQQGNfOzTN7mb9Ads"
-EXPAND_ASSISTANT_ID = "asst_WONo6Qurv0ovhRofzSzMGMxu"
+# ASSISTANT_ID = "asst_pllDb28NQQGNfOzTN7mb9Ads"
+# EXPAND_ASSISTANT_ID = "asst_WONo6Qurv0ovhRofzSzMGMxu"
 WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
+
+
+SIMPLIFY_PROMPT = """You are a human encyclopedia, with expertise on all of the world's knowledge.
+You will be given an article from Wikipedia, as messy plain text.
+Your job is to produce a version of the article in "Keyed Simple English", in simple HTML. "Keyed Simple English" is a language mode with a shorter overall length, shorter sentences, simpler words, and keyed words or phrases. Concepts are distilled and only the most important details are kept. Aim for a reading level of around sixth grade. Wrap interesting words or phrases in the simplified article with <a class="key">(the word or phrase)</a>. Include at least 3 key phrases in the entire article.
+
+In your version, you will output the simplified article in HTML (using only the following tags: <p>, <ul>, <ol>, <li>, and <a>), with no additional styles.
+
+Here is an an example, from the Wikipedia article for soccer.
+English: ```The game of association football is played in accordance with the Laws of the Game, a set of rules that has been in effect since 1863 and maintained by the IFAB since 1886. The game is played with a football that is 68-70in circumference. The two teams compete to get the ball into the other team's goal (between the posts, under the bar, and across the goal line), thereby scoring a goal. When the ball is in play, the players mainly use their feet, but may use any other part of their body, except for their hands or arms, to control, strike, or pass the ball. Only the goalkeepers may use their hands and arms, and only then within the penalty area. The team that has scored more goals at the end of the game is the winner. There are situations where a goal can be disallowed, such as an offside call or a foul in the build-up to the goal. Depending on the format of the competition, an equal number of goals scored may result in a draw being declared, or the game goes into extra time or a penalty shoot-out.```
+Simple English: ```<p>Games like <a class="key">football</a> have been played around the world since ancient times. The game came from <a class="key">England</a>, where the <a class="key">Football Association</a> wrote a standard set of rules for the game in 1863.</p>```
+
+Your input will be messy plaintext, and your output will be "Keyed Simple English" with only the following tags: <p>, <ul>, <ol>, <li>, and <a>."""
+
+EXPAND_PROMPT = """You are an extremely knowledgeable human encyclopedia and your task is to help me elaborate on certain key phrases within an existing body of text. I will provide you with a paragraph of textual content with a single word or phrase marked with quotations. Your job is to expand on this quoted word while keeping the surrounding sentences and paragraph exactly the same and while maintaining the logical flow of the paragraph. Within the expansion, make sure to wrap some words in "a" html elements like this: <a class="key">(the word or phrase)</a>. Make sure to include at least 2 words surrounded with <a> tags in this expansion. Make sure to wrap your entire expansion of the keyword with a span tag that has an id of "fin" like so: <span id="fin">(expanded content)</span>. It is really important that your expanded content has at least 2 words surrounded by at <a> tags.
+
+Here is an example of your task:
+
+input:  The euro (symbol: €; currency code: EUR) is the official "currency" (expand on this quoted keyword) of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
+
+Your output:  The euro (symbol: €; currency code: EUR) is the official <span id="fin">currency, currency is a medium of exchange for goods and services - In short, it's <a class="key">money<a>, in the form of paper and coins, usually issued by a <a class="key">government<a> and generally accepted at its face value as a method of <<a class="key">payment<a>, </span> of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
+
+Here is your input:"""
 
 
 def url_to_wid(url: str) -> str:
@@ -223,31 +242,49 @@ def simplify() -> Tuple[Response, int]:
     if html_content is None or not html_content:
         return jsonify({"error": "Couldn't get content for page"}), 500
 
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token parameter is required"}), 400
+
     try:
-        thread = client.beta.threads.create()
-
-        client.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=html_content,
+        client = OpenAI(
+            api_key=token,
         )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
+    try:
+        # This was the way we did it at the hackathon, with assistants
+        # thread = client.beta.threads.create()
+        # client.beta.threads.messages.create(
+        #     thread_id=thread.id,
+        #     role="user",
+        #     content=html_content,
+        # )
         # TODO(michaelfromyeg): replace this step with data in the actual response
-        run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id,
-            assistant_id=ASSISTANT_ID,
+        # run = client.beta.threads.runs.create_and_poll(
+        #     thread_id=thread.id,
+        #     assistant_id=ASSISTANT_ID,
+        # )
+        # print(f"Run for {url} completed with status: {run.status}")
+        # simple_content = ""
+        # if run.status == "completed":
+        #     messages = client.beta.threads.messages.list(thread_id=thread.id)
+        #     for message in messages:
+        #         assert message.content[0].type == "text"
+        #         if message.role == "assistant":
+        #             simple_content += message.content[0].text.value
+
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": SIMPLIFY_PROMPT},
+                {"role": "user", "content": html_content},
+            ],
         )
-
-        print(f"Run for {url} completed with status: {run.status}")
-
-        simple_content = ""
-        if run.status == "completed":
-            messages = client.beta.threads.messages.list(thread_id=thread.id)
-
-            for message in messages:
-                assert message.content[0].type == "text"
-                if message.role == "assistant":
-                    simple_content += message.content[0].text.value
+        print(completion)
+        print(completion.choices[0].message)
+        simple_content = completion.choices[0].message.content
 
         sanitized_content = sanitize(simple_content)
 
@@ -256,6 +293,7 @@ def simplify() -> Tuple[Response, int]:
 
         return jsonify({"content": sanitized_content}), 200
     except Exception as e:
+        print("error: ", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -266,6 +304,17 @@ def expand() -> Tuple[Response, int]:
     """
     data = request.get_json()
     html_content = data["content"]
+
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token parameter is required"}), 400
+
+    try:
+        client = OpenAI(
+            api_key=token,
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
     # No caching first attempt
     try:
@@ -292,31 +341,36 @@ def expand() -> Tuple[Response, int]:
                 placeholder, replacement_text
             )
 
+        # Again, this was the old way, with assistants
         # AI generated expansion
-        thread = client.beta.threads.create()
+        # thread = client.beta.threads.create()
+        # # print("text_only_with_marked_key: ", text_only_with_marked_key)
+        # client.beta.threads.messages.create(
+        #     thread_id=thread.id,
+        #     role="user",
+        #     content=text_only_with_marked_key,
+        # )
+        # run = client.beta.threads.runs.create_and_poll(
+        #     thread_id=thread.id,
+        #     assistant_id=EXPAND_ASSISTANT_ID,
+        # )
+        # print(f"Run for expand completed with status: {run.status}")
+        # expanded_content = """
+        # if run.status == "completed":
+        #     messages = client.beta.threads.messages.list(thread_id=thread.id)
+        #     for message in messages:
+        #         assert message.content[0].type == "text"
+        #         if message.role == "assistant":
+        #             expanded_content += message.content[0].text.value
 
-        # print("text_only_with_marked_key: ", text_only_with_marked_key)
-        client.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=text_only_with_marked_key,
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": EXPAND_PROMPT},
+                {"role": "user", "content": html_content},
+            ],
         )
-
-        run = client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id,
-            assistant_id=EXPAND_ASSISTANT_ID,
-        )
-
-        print(f"Run for expand completed with status: {run.status}")
-
-        expanded_content = ""
-        if run.status == "completed":
-            messages = client.beta.threads.messages.list(thread_id=thread.id)
-
-            for message in messages:
-                assert message.content[0].type == "text"
-                if message.role == "assistant":
-                    expanded_content += message.content[0].text.value
+        expanded_content = completion.choices[0].message.content
 
         soup = BeautifulSoup(expanded_content, "html.parser")
         generated_text = soup.find(id="fin")
@@ -332,7 +386,6 @@ def expand() -> Tuple[Response, int]:
     except Exception as e:
         print("error: ", e)
         return jsonify({"error": str(e)}), 500
-    return jsonify({"content": "return data"}), 200
 
 
 @app.errorhandler(404)

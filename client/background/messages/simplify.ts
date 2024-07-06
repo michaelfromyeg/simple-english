@@ -28,24 +28,34 @@ const handler: PlasmoMessaging.MessageHandler = async (request, response) => {
     return
   }
 
-  const message = await axios.get(
-    `${BASE_URL}/simplify?url=${windowUrl}&token=${token}`
-  )
-  if (message?.status !== 200 || !message?.data?.content) {
-    console.error(`Failed to fetch; got status=${message?.status}`, {
-      response: message
-    })
+  try {
+    const message = await axios.get(
+      `${BASE_URL}/simplify?url=${windowUrl}&token=${token}`
+    )
+    if (message?.status !== 200 || !message?.data?.content) {
+      console.error(`Failed to fetch; got status=${message?.status}`, {
+        response: message
+      })
+
+      response.send("error")
+      return
+    }
+
+    // for some reason, putting the enum value here makes things break
+    // ...I need to investigate
+    console.log("Setting body content...")
+    await storage.setItem("bodyContent", message.data.content)
+
+    response.send("ok")
+  } catch (error) {
+    console.error(
+      "An error occurred while trying to simplify the on-screen text!",
+      error
+    )
 
     response.send("error")
     return
   }
-
-  // for some reason, putting the enum value here makes things break
-  // ...I need to investigate
-  console.log("Setting body content...")
-  await storage.setItem("bodyContent", message.data.content)
-
-  response.send("ok")
 }
 
 export default handler
