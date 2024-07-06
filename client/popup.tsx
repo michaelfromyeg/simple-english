@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
 
+import { sendToBackground } from "@plasmohq/messaging"
+
 import "./style.css"
 
 let tabs = [
@@ -12,16 +14,17 @@ function DefaultTabContent({
 }: {
   setLoading: (loading: boolean) => void
 }) {
-  const handleClick = async (event: any): Promise<void> => {
-    console.log("Clicked the simplify button!")
-    ///TODO: when waiting for a response from content create a "genereating simplifaication" screen with fade
-    setLoading(true)
-    // Simulate an async operation (e.g., API call)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setLoading(false)
-
-    window.close()
+  const [buttonText, setButtonText] = useState("Simplify Page")
+  const handleClick = async () => {
+    console.log("Simplify button clicked! Sending message to background.")
+    setButtonText("Simplified!")
+    await sendToBackground({
+      name: "simplify"
+    })
   }
+
+  // window.close()
+
   return (
     <motion.div
       exit={{
@@ -40,8 +43,8 @@ function DefaultTabContent({
       <button
         onClick={handleClick}
         type="button"
-        className="w-full inline-flex items-center px-10 py-2.5 text-sm font-medium text-center text-black bg-opacity-50 bg-sky-200 rounded-lg hover:bg-sky-400 focus:outline-none focus:ring-sky-300 dark:bg-sky-300 dark:hover:bg-sky-500 dark:focus:ring-sky-600 hover:bg-opacity-75 hover:backdrop-blur-md">
-        Simplify Page
+        className="w-full inline-flex items-center px-10 py-2.5 text-sm font-medium text-center text-black bg-opacity-50 bg-blue-700 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 hover:bg-opacity-75 hover:backdrop-blur-md">
+        {buttonText}
       </button>
     </motion.div>
   )

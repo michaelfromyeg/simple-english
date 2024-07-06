@@ -1,7 +1,23 @@
 import axios from "axios"
 import type { PlasmoCSConfig } from "plasmo"
 
+import { Storage } from "@plasmohq/storage"
+
 const BASE_URL = "http://127.0.0.1:5000"
+const storage = new Storage()
+
+const updateUrls = async () => {
+  console.log(BASE_URL, window.location.href)
+  const endpoint_url_res = await storage.set("endpoint_url", BASE_URL)
+  const endpoint_url_res2 = await storage.set("endpoint_url", BASE_URL)
+  const current_url_res = await storage.set("current_url", window.location.href)
+  console.log("Res", endpoint_url_res, current_url_res)
+  console.log("Updated current url to: ", window.location.href)
+  // saniry check
+  console.log("Current URL: ", await storage.get("current_url"))
+}
+
+updateUrls()
 
 // Send a request to simplify with current url - server responds with short summary
 const MOCK_SERVER_RESPONSE = `
@@ -126,4 +142,15 @@ export const setupNewKeyWords = () => {
   })
 }
 
-fetchSimplifiedPage(false)
+// fetchSimplifiedPage(false)
+// fetchSimplifiedPage()
+
+storage.watch({
+  simplified_content: ({ newValue: simplifiedContent }) => {
+    console.log("Rendering simplified content...", simplifiedContent)
+    const body = document.querySelector("#bodyContent")
+    body.innerHTML = simplifiedContent
+
+    setupNewKeyWords()
+  }
+})
