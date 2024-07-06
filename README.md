@@ -1,14 +1,16 @@
-<p style="text-align: center;">
+<p align="center">
     <img src="./client/assets/SimpleEnglish.svg" alt="Simple English">
 </p>
 
-# Simple English
+# Simple English 🌐
 
-Rabbit-holes for text-based articles.
+Explore rabbit holes for text-based articles.
 
 ## About
 
-Turn any Wikipedia page into Simple English. Click into concepts via telescopic text.
+Turn any Wikipedia page into Simple English. Expand interesting concepts further via telescopic text.
+
+See a brief demo [here](https://youtube.com/watch?v=-xgwcf60wR8).
 
 TO-DOs...
 
@@ -23,16 +25,22 @@ TO-DOs...
 - [ ] Add "bring your own token" support
 - [ ] Deploy the project
 
+Want to help? See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Usage
 
-Run `bash scripts/setup.sh` to get setup for running the server.
+A guide to running the project on your local machine.
 
-Run `source env/bin/activate`.
+### Server
 
-Add your OpenAI API key in `.env`. Finally, run `make run-server`.
+1. Run `bash scripts/setup.sh` to get setup for running the server.
+2. Run `source env/bin/activate`.
+3. Add your OpenAI API key in `.env`. Finally, run `make run-server`.
 
-For the client, install `pnpm` (e.g., `brew install pnpm`).
+## Client
 
-Then run `pnpm install` and `pnpm dev` to build the project.
+1. Install `pnpm` (e.g., `brew install pnpm`).
+2. Then run `pnpm install` and `pnpm dev` to build the project.
+3. Load the unpacked extension into Chrome the usual way (`chrome://extensions`).
 
-Load the unpacked extension into Chrome the usual way (`chrome://extensions`).
+Note that `plasmo` supports hot reloading the development version of the extension.
