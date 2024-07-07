@@ -6,7 +6,7 @@ Only used in development to save time and avoid rate limiting.
 
 import os
 
-from .constants import DEBUG
+from server.constants import DEBUG
 
 
 def url_to_wid(url: str) -> str:

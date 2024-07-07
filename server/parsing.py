@@ -6,7 +6,7 @@ Maybe I should refactor it into classes or structs or something.
 
 from bs4 import BeautifulSoup
 
-from .constants import WIKIPEDIA_BODY_CONTENT_ID
+from server.constants import WIKIPEDIA_BODY_CONTENT_ID
 
 
 def tidy_for_summary(html: str) -> str:

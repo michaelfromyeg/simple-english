@@ -17,11 +17,11 @@ from flask_caching import Cache
 from flask_cors import CORS
 from openai import AuthenticationError, BadRequestError, OpenAI
 
-from .cache import read_article, save_article, url_to_wid
-from .constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT, URLS
-from .exceptions import BadUrlError, MissingTokenError, WikipediaLimitError
-from .logger import logger
-from .parsing import (
+from server.cache import read_article, save_article, url_to_wid
+from server.constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT, URLS
+from server.exceptions import BadUrlError, MissingTokenError, WikipediaLimitError
+from server.logger import logger
+from server.parsing import (
     format_for_expand,
     get_expanded_contents,
     sanitize_summary,
