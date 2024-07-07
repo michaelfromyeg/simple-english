@@ -28,6 +28,7 @@ const handler: PlasmoMessaging.MessageHandler = async (request, response) => {
     return
   }
 
+  // TODO(michaelfromyeg): how to make axios not throw errors on non-200 status codes?
   try {
     const message = await axios.get(
       `${BASE_URL}/simplify?url=${windowUrl}&token=${token}`
@@ -53,8 +54,12 @@ const handler: PlasmoMessaging.MessageHandler = async (request, response) => {
       error
     )
 
-    response.send("error")
-    return
+    if (error?.response?.status === 401) {
+      console.log("sending unauthorized...")
+      response.send("unauthorized")
+    } else {
+      response.send("error")
+    }
   }
 }
 

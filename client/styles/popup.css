@@ -20,6 +20,14 @@
   background-color: green;
 }
 
-.button.error {
+.button.error,
+.button.unauthorized {
   background-color: red;
+}
+
+.error-message {
+  color: grey;
+  font-size: 12px;
+  text-align: center;
+  font-family: "Times New Roman", Times, serif;
 }

@@ -1,206 +1,44 @@
 """
-The backend for simplifying and expanding Wikipedia articles/
-
-Simplify prompt.
-
-```
-You are a human encyclopedia, with expertise on all of the world's knowledge.
-You will be given an article from Wikipedia, as messy plain text.
-Your job is to produce a version of the article in "Keyed Simple English", in simple HTML. "Keyed Simple English" is a language mode with a shorter overall length, shorter sentences, simpler words, and keyed words or phrases. Concepts are distilled and only the most important details are kept. Aim for a reading level of around sixth grade. Wrap interesting words or phrases in the simplified article with <a class="key">(the word or phrase)</a>. Include at least 3 key phrases in the entire article.
-
-In your version, you will output the simplified article in HTML (using only the following tags: <p>, <ul>, <ol>, <li>, and <a>), with no additional styles.
-
-Here is an an example, from the Wikipedia article for soccer.
-English: ```The game of association football is played in accordance with the Laws of the Game, a set of rules that has been in effect since 1863 and maintained by the IFAB since 1886. The game is played with a football that is 68-70in circumference. The two teams compete to get the ball into the other team's goal (between the posts, under the bar, and across the goal line), thereby scoring a goal. When the ball is in play, the players mainly use their feet, but may use any other part of their body, except for their hands or arms, to control, strike, or pass the ball. Only the goalkeepers may use their hands and arms, and only then within the penalty area. The team that has scored more goals at the end of the game is the winner. There are situations where a goal can be disallowed, such as an offside call or a foul in the build-up to the goal. Depending on the format of the competition, an equal number of goals scored may result in a draw being declared, or the game goes into extra time or a penalty shoot-out.```
-Simple English: ```<p>Games like <a class="key">football</a> have been played around the world since ancient times. The game came from <a class="key">England</a>, where the <a class="key">Football Association</a> wrote a standard set of rules for the game in 1863.</p>```
-
-Your input will be messy plaintext, and your output will be "Keyed Simple English" with only the following tags: <p>, <ul>, <ol>, <li>, and <a>.
-```
-
-Expand prompt.
-
-```
-TODO(michaelfromyeg): write!
-```
+The server for the Simple English project.
 """
 
-import os
+import logging
 import signal
 import sys
+from signal import Signals
+from types import FrameType
 from typing import Tuple
 
 import requests
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
-from openai import AssistantEventHandler, OpenAI
-from typing_extensions import override
+from openai import AuthenticationError, OpenAI
+
+from .cache import read_article, save_article
+from .constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT, URLS
+from .exceptions import BadUrlError, MissingTokenError, WikipediaLimitError
+from .logger import logger
+from .parsing import (
+    format_for_expand,
+    get_expanded_contents,
+    sanitize_summary,
+    tidy_for_summary,
+)
 
 load_dotenv()
 
-DEBUG = True
+if DEBUG:
+    logging.getLogger("flask_cors").level = logging.DEBUG
 
 app = Flask(__name__)
-CORS(app)
 
-# NOTE: this creates an assistant programatically; maybe there's a way to just 'update' one
-# ...use it sparingly
-
-# assistant = client.beta.assistants.create(
-#     name="Simple English Wikipedia Assistant",
-#     instructions="""You are a human encyclopedia, with expertise on all of the world's knowledge.
-# You will be given an article from Wikipedia, as HTML.
-# Your job is to produce a version of the article in "Keyed Simple English", also in HTML. "Keyed Simple English" is a language mode with a shorter overall length, shorter sentences, simpler words, and keyed words or phrases. Concepts are distilled and only the most important details are kept. Aim for a reading level of around sixth grade. In your outputted version, you will remove all links to other Wikipedia pages or external sources. Instead, wrap interesting words or phrases in the simplified article with <a class="key">(the word or phrase)</a>. Do this sparingly, for concepts or words you think the user might want to learn more about. Include at least 3 key phrases in the entire article.
-# Here is an an example, from the Wikipedia article for soccer.
-# English: ```<p>The game of association football is played in accordance with the <a href="/wiki/Laws_of_the_Game_(association_football)" title="Laws of the Game (association football)">Laws of the Game</a>, a set of rules that has been in effect since 1863 and maintained by the <a href="/wiki/International_Football_Association_Board" title="International Football Association Board">IFAB</a> since 1886. The game is played with a <a href="/wiki/Ball_(association_football)" title="Ball (association football)">football</a> that is 68–70&nbsp;cm (27–28&nbsp;in) in <a href="/wiki/Circumference" title="Circumference">circumference</a>. The two teams compete to get the ball into the other team's goal (between the posts, under the bar, and across the goal line), thereby scoring a goal. When the ball is in play, the players mainly use their feet, but may use any other part of their body, except for their hands or arms, to control, strike, or pass the ball. Only the <a href="/wiki/Goalkeeper_(association_football)" title="Goalkeeper (association football)">goalkeepers</a> may use their hands and arms, and only then within the <a href="/wiki/Penalty_area" title="Penalty area">penalty area</a>. The team that has scored more goals at the end of the game is the winner. There are situations where a goal can be disallowed, such as an offside call or a foul in the build-up to the goal. Depending on the format of the competition, an equal number of goals scored may result in a <a href="/wiki/Tie_(draw)#Association_football" title="Tie (draw)">draw</a> being declared, or the game goes into <a href="/wiki/Overtime_(sports)#Association_football" title="Overtime (sports)">extra time</a> or a <a href="/wiki/Penalty_shoot-out_(association_football)" title="Penalty shoot-out (association football)">penalty shoot-out</a>.<sup id="cite_ref-laws51-52_6-0" class="reference"><a href="#cite_note-laws51-52-6">[5]</a></sup></p>```
-# Simple English: ```<p>Games like <a class="key">football</a> have been played around the world since ancient times. The game came from <a class="key">England</a>, where the <a class="key">Football Association</a> wrote a standard set of rules for the game in 1863.</p>```
-# Your input will be valid HTML, and your output must also be valid HTML.""",
-#     tools=[],
-#     model="gpt-4o",
-# )
-
-# ASSISTANT_ID = "asst_pllDb28NQQGNfOzTN7mb9Ads"
-# EXPAND_ASSISTANT_ID = "asst_WONo6Qurv0ovhRofzSzMGMxu"
-WIKIPEDIA_BODY_CONTENT_ID = "mw-content-text"
-
-
-SIMPLIFY_PROMPT = """You are a human encyclopedia, with expertise on all of the world's knowledge.
-You will be given an article from Wikipedia, as messy plain text.
-Your job is to produce a version of the article in "Keyed Simple English", in simple HTML. "Keyed Simple English" is a language mode with a shorter overall length, shorter sentences, simpler words, and keyed words or phrases. Concepts are distilled and only the most important details are kept. Aim for a reading level of around sixth grade. Wrap interesting words or phrases in the simplified article with <a class="key">(the word or phrase)</a>. Include at least 3 key phrases in the entire article.
-
-In your version, you will output the simplified article in HTML (using only the following tags: <p>, <ul>, <ol>, <li>, and <a>), with no additional styles.
-
-Here is an an example, from the Wikipedia article for soccer.
-English: ```The game of association football is played in accordance with the Laws of the Game, a set of rules that has been in effect since 1863 and maintained by the IFAB since 1886. The game is played with a football that is 68-70in circumference. The two teams compete to get the ball into the other team's goal (between the posts, under the bar, and across the goal line), thereby scoring a goal. When the ball is in play, the players mainly use their feet, but may use any other part of their body, except for their hands or arms, to control, strike, or pass the ball. Only the goalkeepers may use their hands and arms, and only then within the penalty area. The team that has scored more goals at the end of the game is the winner. There are situations where a goal can be disallowed, such as an offside call or a foul in the build-up to the goal. Depending on the format of the competition, an equal number of goals scored may result in a draw being declared, or the game goes into extra time or a penalty shoot-out.```
-Simple English: ```<p>Games like <a class="key">football</a> have been played around the world since ancient times. The game came from <a class="key">England</a>, where the <a class="key">Football Association</a> wrote a standard set of rules for the game in 1863.</p>```
-
-Your input will be messy plaintext, and your output will be "Keyed Simple English" with only the following tags: <p>, <ul>, <ol>, <li>, and <a>."""
-
-EXPAND_PROMPT = """You are an extremely knowledgeable human encyclopedia and your task is to help me elaborate on certain key phrases within an existing body of text. I will provide you with a paragraph of textual content with a single word or phrase marked with quotations. Your job is to expand on this quoted word while keeping the surrounding sentences and paragraph exactly the same and while maintaining the logical flow of the paragraph. Within the expansion, make sure to wrap some words in "a" html elements like this: <a class="key">(the word or phrase)</a>. Make sure to include at least 2 words surrounded with <a> tags in this expansion. Make sure to wrap your entire expansion of the keyword with a span tag that has an id of "fin" like so: <span id="fin">(expanded content)</span>. It is really important that your expanded content has at least 2 words surrounded by at <a> tags.
-
-Here is an example of your task:
-
-input:  The euro (symbol: €; currency code: EUR) is the official "currency" (expand on this quoted keyword) of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
-
-Your output:  The euro (symbol: €; currency code: EUR) is the official <span id="fin">currency, currency is a medium of exchange for goods and services - In short, it's <a class="key">money<a>, in the form of paper and coins, usually issued by a <a class="key">government<a> and generally accepted at its face value as a method of <<a class="key">payment<a>, </span> of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
-
-Here is your input:"""
-
-
-def url_to_wid(url: str) -> str:
-    """
-    Convert a Wikipedia URL to a (w)ID.
-    """
-    title = url.split("/wiki/")[-1]
-    wid = title.replace("_", "-").lower()
-
-    # remove any query parameters
-    if "?" in wid:
-        wid = wid.split("?")[0]
-
-    return wid
-
-
-def save_article(url: str, article: str, short: bool = False) -> None:
-    """
-    Save the HTML file of an article to disk.
-    """
-    wid = url_to_wid(url)
-    file_name = f"{wid}-short.txt" if short else f"{wid}.txt"
-    file_path = os.path.join("data", file_name)
-
-    if os.path.isfile(file_path):
-        return
-
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.write(article)
-
-    return None
-
-
-def read_article(url: str, short: bool = False) -> str | None:
-    """
-    Read the article from disk, if it exists.
-    """
-    wid = url_to_wid(url)
-    file_name = f"{wid}-short.txt" if short else f"{wid}.txt"
-    file_path = os.path.join("data", file_name)
-
-    if not os.path.isfile(file_path):
-        return None
-
-    with open(file_path, "r", encoding="utf-8") as file:
-        content = file.read()
-
-    return content
-
-
-def tidy(html: str) -> str:
-    """
-    Tidy the HTML content of a Wikipedia article.
-    """
-    soup = BeautifulSoup(html, "html.parser")
-
-    body = soup.find(id=WIKIPEDIA_BODY_CONTENT_ID)
-
-    # Remove everything from "See also" on
-    h2_elements = body.find_all("h2", class_=None)
-    for h2_element in h2_elements:
-        if h2_element.find("span", id="See_also"):
-            while h2_element:
-                next_element = h2_element.find_next_sibling()
-                h2_element.decompose()
-                h2_element = next_element
-
-    # Remove the side panel, if it exists
-    infobox = body.find("table", class_="infobox")
-    if infobox:
-        infobox.decompose()
-
-    text_content = body.get_text()
-
-    # Dump the content into a text file, stripping links, etc.
-    # if we had more time, it'd be nice to preserve some structure (e.g., headings, paragraphs)
-    # but GPT-4o does pretty well with just this
-    lines = text_content.split("\n")
-    lines_stripped = [line.strip() for line in lines]
-    non_empty_lines = [line for line in lines_stripped if line]
-    cleaned_text = "\n".join(non_empty_lines)
-
-    return cleaned_text
-
-
-def sanitize(output: str) -> str:
-    """
-    Check for bad parts of the output, by line.
-
-    There's definitely a faster way you could do this, but we're
-    dominated by the LLM right now so who cares.
-    """
-    lines = output.split("\n")
-
-    if lines[0] == "```html":
-        lines = lines[1:]
-
-    if lines[-1] == "```":
-        lines = lines[:-1]
-
-    return "\n".join(lines)
-
-
-class EventHandler(AssistantEventHandler):
-    @override
-    def on_text_created(self, text) -> None:
-        print("", end="")
-
-    @override
-    def on_text_delta(self, delta, snapshot) -> None:
-        print(delta.value, end="")
-
-    @override
-    def on_end(self) -> None:
-        print("", end="", flush=True)
+if DEBUG:
+    logger.info("Running in DEBUG mode, using CORS for all origins")
+    CORS(app, supports_credentials=True)
+else:
+    logger.info("Running in production mode, using CORS for a specific origin")
+    CORS(app, resources={r"/*": {"origins": URLS}})
 
 
 @app.route("/status", methods=["GET"])
@@ -213,210 +51,163 @@ def status() -> Tuple[Response, int]:
 
 @app.route("/simplify", methods=["GET"])
 def simplify() -> Tuple[Response, int]:
-    """ """
+    """
+    Simplfy article content.
+    """
     url = request.args.get("url")
     if not url:
-        return jsonify({"error": "URL parameter is required"}), 400
+        raise BadUrlError("A valid Wikipedia URL is required.")
 
-    # naive caching so the project looks cool
-    simple_content = read_article(url, short=True)
-    if simple_content is not None:
-        return jsonify({"content": simple_content}), 200
+    # NOTE: the calls to read_article and save_article are for naive caching
+    # ...they only run if the DEBUG flag is set!
+    llm_response = read_article(url, short=True)
+    if llm_response is not None:
+        return jsonify({"content": llm_response}), 200
 
-    # first, get the article contents
-    # checks an on-disk cache first (so we don't get rate-limited, or something)
     html_content = read_article(url)
     if html_content is None:
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
+        response = requests.get(url)
+        response.raise_for_status()
 
-            if DEBUG:
-                print(f"Got response of {response.status_code} for {url}")
+        html_content = tidy_for_summary(response.text)
 
-            html_content = tidy(response.text)
-            save_article(url, html_content)
-        except requests.RequestException as e:
-            return jsonify({"error": str(e)}), 500
+        save_article(url, html_content)
 
     if html_content is None or not html_content:
-        return jsonify({"error": "Couldn't get content for page"}), 500
+        raise WikipediaLimitError("Could not retrieve Wikipedia article content.")
 
     token = request.args.get("token")
     if not token:
-        return jsonify({"error": "Token parameter is required"}), 400
+        raise MissingTokenError("An OpenAI token is required.")
 
-    try:
-        client = OpenAI(
-            api_key=token,
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    client = OpenAI(
+        api_key=token,
+    )
 
-    try:
-        # This was the way we did it at the hackathon, with assistants
-        # thread = client.beta.threads.create()
-        # client.beta.threads.messages.create(
-        #     thread_id=thread.id,
-        #     role="user",
-        #     content=html_content,
-        # )
-        # TODO(michaelfromyeg): replace this step with data in the actual response
-        # run = client.beta.threads.runs.create_and_poll(
-        #     thread_id=thread.id,
-        #     assistant_id=ASSISTANT_ID,
-        # )
-        # print(f"Run for {url} completed with status: {run.status}")
-        # simple_content = ""
-        # if run.status == "completed":
-        #     messages = client.beta.threads.messages.list(thread_id=thread.id)
-        #     for message in messages:
-        #         assert message.content[0].type == "text"
-        #         if message.role == "assistant":
-        #             simple_content += message.content[0].text.value
+    logger.debug("[simplify] html_content: %s", html_content)
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": SIMPLIFY_PROMPT},
+            {"role": "user", "content": html_content},
+        ],
+    )
+    llm_response = completion.choices[0].message.content
+    logger.debug("[simplify] llm_response: %s", llm_response)
 
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": SIMPLIFY_PROMPT},
-                {"role": "user", "content": html_content},
-            ],
-        )
-        print(completion)
-        print(completion.choices[0].message)
-        simple_content = completion.choices[0].message.content
+    sanitized_content = sanitize_summary(llm_response)
 
-        sanitized_content = sanitize(simple_content)
+    save_article(url, sanitized_content, short=True)
 
-        # naive caching part 2
-        save_article(url, sanitized_content, short=True)
-
-        return jsonify({"content": sanitized_content}), 200
-    except Exception as e:
-        print("error: ", e)
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"content": sanitized_content}), 200
 
 
 @app.route("/expand", methods=["POST"])
 def expand() -> Tuple[Response, int]:
     """
-    expand on a given key phrase
+    Expand on a given key phrase.
     """
     data = request.get_json()
+
+    # TODO(michaelfromyeg): add a guard for content
     html_content = data["content"]
 
     token = request.args.get("token")
     if not token:
-        return jsonify({"error": "Token parameter is required"}), 400
+        raise MissingTokenError("An OpenAI token is required.")
 
-    try:
-        client = OpenAI(
-            api_key=token,
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    client = OpenAI(
+        api_key=token,
+    )
 
-    # No caching first attempt
-    try:
-        # Strip paragraph and prepare prompt
-        soup = BeautifulSoup(html_content, "html.parser")
+    user_prompt = format_for_expand(html_content)
+    logger.debug("[expand] user_prompt: %s", user_prompt)
 
-        # Extract the element with id "selected"
-        selected_element = soup.find(id="selected")
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": EXPAND_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    llm_response = completion.choices[0].message.content
+    logger.debug("[expand] llm_response: %s", llm_response)
 
-        # If the selected element exists, replace it with a placeholder
-        if selected_element:
-            placeholder = "PLACEHOLDER_FOR_SELECTED"
-            selected_text = selected_element.get_text()
-            selected_element.replace_with(placeholder)
+    expanded_content = get_expanded_contents(llm_response)
+    return jsonify({"content": expanded_content}), 200
 
-        # Get the text only from the soup (this will remove all HTML tags)
-        text_only_with_marked_key = soup.get_text()
 
-        # Replace the placeholder back with the modified text
-        if selected_element:
-            # replacement_text = f'"{selected_text}" (expand on this qouted keyword and keep the surrounding sentence exactly the same)'
-            replacement_text = f'"{selected_text}"'
-            text_only_with_marked_key = text_only_with_marked_key.replace(
-                placeholder, replacement_text
-            )
+@app.errorhandler(AuthenticationError)
+def handle_openai_error(error: AuthenticationError) -> Tuple[Response, int]:
+    """
+    Handle OpenAI errors and return a 401 response.
+    """
+    logger.warning(str(error))
+    return jsonify({"error": "Authentication Error", "message": str(error)}), 401
 
-        # Again, this was the old way, with assistants
-        # AI generated expansion
-        # thread = client.beta.threads.create()
-        # # print("text_only_with_marked_key: ", text_only_with_marked_key)
-        # client.beta.threads.messages.create(
-        #     thread_id=thread.id,
-        #     role="user",
-        #     content=text_only_with_marked_key,
-        # )
-        # run = client.beta.threads.runs.create_and_poll(
-        #     thread_id=thread.id,
-        #     assistant_id=EXPAND_ASSISTANT_ID,
-        # )
-        # print(f"Run for expand completed with status: {run.status}")
-        # expanded_content = """
-        # if run.status == "completed":
-        #     messages = client.beta.threads.messages.list(thread_id=thread.id)
-        #     for message in messages:
-        #         assert message.content[0].type == "text"
-        #         if message.role == "assistant":
-        #             expanded_content += message.content[0].text.value
 
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": EXPAND_PROMPT},
-                {"role": "user", "content": html_content},
-            ],
-        )
-        expanded_content = completion.choices[0].message.content
+@app.errorhandler(BadUrlError)
+def handle_url_error(error: BadUrlError) -> Tuple[Response, int]:
+    """
+    Handle BadUrlError and return a 400 response.
+    """
+    logger.warning(str(error))
+    return jsonify({"error": "Bad URL", "message": str(error)}), 400
 
-        soup = BeautifulSoup(expanded_content, "html.parser")
-        generated_text = soup.find(id="fin")
 
-        inner_generated_text = "".join(
-            str(element) for element in generated_text.contents
-        )
+@app.errorhandler(MissingTokenError)
+def handle_token_error(error: MissingTokenError) -> Tuple[Response, int]:
+    """
+    Handle MissingTokenError and return a 400 response.
+    """
+    logger.warning(str(error))
+    return jsonify({"error": "Missing Token", "message": str(error)}), 400
 
-        print("generated_text: ", generated_text)
-        print("inner_generated_text", inner_generated_text)
 
-        return jsonify({"content": inner_generated_text}), 200
-    except Exception as e:
-        print("error: ", e)
-        return jsonify({"error": str(e)}), 500
+@app.errorhandler(WikipediaLimitError)
+def handle_wikipedia_error(error: WikipediaLimitError) -> Tuple[Response, int]:
+    """
+    Handle WikipediaError and return a 429 response.
+    """
+    logger.warning(str(error))
+    return jsonify({"error": "Wikipedia Limit", "message": str(error)}), 429
+
+
+@app.errorhandler(400)
+def bad_request_error(error: Exception) -> Tuple[Response, int]:
+    """
+    Wrap the error in a 400 JSON response.
+    """
+    logger.warning(str(error))
+    return jsonify({"error": "Bad Request", "message": str(error)}), 400
 
 
 @app.errorhandler(404)
-def not_found_error(error):
+def not_found_error(error: Exception) -> Tuple[Response, int]:
     """
     Wrap the error in a 404 JSON response.
     """
-    response = jsonify({"error": "Not Found", "message": str(error)})
-    response.status_code = 404
-    return response
+    logger.warning(str(error))
+    return jsonify({"error": "Not Found", "message": str(error)}), 404
 
 
 @app.errorhandler(500)
-def internal_error(error):
+def internal_error(error: Exception) -> Tuple[Response, int]:
     """
     Wrap the error in a 500 JSON response.
     """
-    response = jsonify({"error": "Internal Server Error", "message": str(error)})
-    response.status_code = 500
-    return response
+    logger.error(str(error))
+    return jsonify({"error": "Internal Server Error", "message": str(error)}), 500
 
 
-def signal_handler(sig, frame):
+def interrupt_handler(sig: Signals, frame: FrameType) -> None:
     """
-    If we created an assistant, we should maybe delete it.
+    Perform any necessary clean-up steps in development.
     """
-    print("Received Ctrl+C - cleaning up...")
-    # client.beta.assistants.delete(assistant.id)
+    logger.info("Received Ctrl+C, cleaning up...")
     sys.exit(0)
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGINT, signal_handler)
-    app.run(debug=True)
+    signal.signal(signal.SIGINT, interrupt_handler)
+    app.run(debug=DEBUG)
