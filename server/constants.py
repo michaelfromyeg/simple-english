@@ -7,7 +7,6 @@ DEBUG = False
 
 # the in-production URLs
 URLS = [
-    "https://api.simple-english.michaeldemar.co",
     "chrome-extension://jbhfjiiconjlnhphicpeodlhiokdeihn",
     r"https://.*\.wikipedia\.org",
 ]
