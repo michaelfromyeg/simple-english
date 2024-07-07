@@ -3,6 +3,7 @@ The server for the Simple English project.
 """
 
 import logging
+import os
 import signal
 import sys
 from signal import Signals
@@ -245,4 +246,8 @@ def interrupt_handler(sig: Signals, frame: FrameType) -> None:
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, interrupt_handler)
-    app.run(debug=DEBUG)
+
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", 5000))
+
+    app.run(host=host, port=port, debug=DEBUG)
