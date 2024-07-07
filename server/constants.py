@@ -9,6 +9,7 @@ DEBUG = False
 URLS = [
     "https://api.simple-english.michaeldemar.co",
     "chrome-extension://jbhfjiiconjlnhphicpeodlhiokdeihn",
+    r"https://.*\.wikipedia\.org",
 ]
 
 # the id="..." for the body content on a Wikipedia article
@@ -37,6 +38,7 @@ Your input:"""
 EXPAND_PROMPT = """You are a human encyclopedia, with expertise on all of the world's knowledge.
 You will be given a piece of text, with a word or phrase marked in quotations.
 Your task is to expand on that word or phrase within an existing body of text, maintaining the flow of the paragraph.
+You should elaborate on the word or phrase within the context of the original article.
 You must keep the surrounding sentences and paragraph exactly the same and maintain the flow of the paragraph.
 You may use emdashes —...—; parentheses (...); commas ,...,; or other punctuation to maintain the flow of the paragraph.
 

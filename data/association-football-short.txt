@@ -1,3 +1,0 @@
-<p>Football is a team sport played with a <a class="key">spherical ball</a> by two teams of 11 players. The game is played on a rectangular field called a pitch to score goals by moving the ball into the opposing team's goal.</p>
-<p>The game follows the <a class="key">Laws of the Game</a> set in 1863, with rules maintained by IFAB. Players mainly use their feet to play, except for goalkeepers within the penalty area. The team with more goals wins the game.</p>
-<p><a class="key">FIFA</a> governs international football and oversees competitions like the FIFA World Cup and <a class="key">UEFA</a> Champions League. Football is popular worldwide, with millions watching matches and playing the game.</p>

@@ -17,7 +17,7 @@ from flask_cors import CORS
 from openai import AuthenticationError, BadRequestError, OpenAI
 
 from .cache import read_article, save_article, url_to_wid
-from .constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT
+from .constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT, URLS
 from .exceptions import BadUrlError, MissingTokenError, WikipediaLimitError
 from .logger import logger
 from .parsing import (
@@ -39,8 +39,14 @@ if DEBUG:
     CORS(app, supports_credentials=True)
 else:
     logger.info("Running in production mode, using CORS for a specific origin")
-    CORS(app, supports_credentials=True)
-    # CORS(app, resources={r"/*": {"origins": URLS}})
+    CORS(
+        app,
+        supports_credentials=True,
+        methods=["OPTIONS", "GET", "POST"],
+        resources={r"/*": {"origins": URLS}},
+        expose_headers=["Content-Type", "Authorization"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
 
 cache = Cache(
     config={
