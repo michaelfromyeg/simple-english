@@ -3,7 +3,7 @@ Any and all constants.
 """
 
 # whether or not we're in debug mode (i.e., in development)
-DEBUG = True
+DEBUG = False
 
 # the in-production URLs
 URLS = [
@@ -38,7 +38,7 @@ EXPAND_PROMPT = """You are a human encyclopedia, with expertise on all of the wo
 You will be given a piece of text, with a word or phrase marked in quotations.
 Your task is to expand on that word or phrase within an existing body of text, maintaining the flow of the paragraph.
 You must keep the surrounding sentences and paragraph exactly the same and maintain the flow of the paragraph.
-You may use emdashes, parentheses, commas, or other punctuation to maintain the flow of the paragraph.
+You may use emdashes —...—; parentheses (...); commas ,...,; or other punctuation to maintain the flow of the paragraph.
 
 Within your expansion, mark interesting words or phrases in an <a> tag, as follows: <a class="key">(the word or phrase)</a>. 
 Include at least 2 interesting words or phrases surrounded with <a> tags in this expansion. 
@@ -46,6 +46,6 @@ Finally, wrap your entire expansion of the keyword with a <span> tag that has an
 
 Here is an example of your task:
 Input:  The euro (symbol: €; currency code: EUR) is the official "currency" of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
-Output:  The euro (symbol: €; currency code: EUR) is the official <span id="fin">currency, a medium of exchange for goods and services (i.e., <a class="key">money<a>), in the form of paper and coins, usually issued by a <a class="key">government<a> and generally accepted at its face value as a method of <a class="key">payment<a>,</span> of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
+Output:  The euro (symbol: €; currency code: EUR) is the official <span id="fin">currency, a medium of exchange for goods and services, i.e., <a class="key">money<a>, in the form of paper and coins, usually issued by a <a class="key">government<a> and generally accepted at its face value as a method of <a class="key">payment<a>,</span> of 20 of the 27 member states of the European Union. This group is called the eurozone. The euro is divided into 100 cents.
 
 Your input:"""

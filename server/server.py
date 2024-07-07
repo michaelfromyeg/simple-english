@@ -12,11 +12,12 @@ from typing import Tuple
 import requests
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request
+from flask_caching import Cache
 from flask_cors import CORS
-from openai import AuthenticationError, OpenAI
+from openai import AuthenticationError, BadRequestError, OpenAI
 
-from .cache import read_article, save_article
-from .constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT, URLS
+from .cache import read_article, save_article, url_to_wid
+from .constants import DEBUG, EXPAND_PROMPT, SIMPLIFY_PROMPT
 from .exceptions import BadUrlError, MissingTokenError, WikipediaLimitError
 from .logger import logger
 from .parsing import (
@@ -38,7 +39,17 @@ if DEBUG:
     CORS(app, supports_credentials=True)
 else:
     logger.info("Running in production mode, using CORS for a specific origin")
-    CORS(app, resources={r"/*": {"origins": URLS}})
+    CORS(app, supports_credentials=True)
+    # CORS(app, resources={r"/*": {"origins": URLS}})
+
+cache = Cache(
+    config={
+        "CACHE_TYPE": "filesystem",
+        "CACHE_DIR": "cache",
+        "CACHE_DEFAULT_TIMEOUT": 3600 * 24 * 7,
+    }
+)
+cache.init_app(app)
 
 
 @app.route("/status", methods=["GET"])
@@ -49,7 +60,16 @@ def status() -> Tuple[Response, int]:
     return jsonify({"status": "up"}), 200
 
 
+def make_simplify_cache_key():
+    """
+    Turn the Wikipedia URL into a cache key.
+    """
+    url = request.args.get("url")
+    return url_to_wid(url)
+
+
 @app.route("/simplify", methods=["GET"])
+@cache.cached(make_cache_key=make_simplify_cache_key)
 def simplify() -> Tuple[Response, int]:
     """
     Simplfy article content.
@@ -137,8 +157,17 @@ def expand() -> Tuple[Response, int]:
     return jsonify({"content": expanded_content}), 200
 
 
+@app.errorhandler(BadRequestError)
+def handle_openai_error(error: BadRequestError) -> Tuple[Response, int]:
+    """
+    Handle OpenAI errors and return a 400 response.
+    """
+    logger.warning(str(error))
+    return jsonify({"error": "Bad OpenAI Request", "message": str(error)}), 400
+
+
 @app.errorhandler(AuthenticationError)
-def handle_openai_error(error: AuthenticationError) -> Tuple[Response, int]:
+def handle_openai_auth_error(error: AuthenticationError) -> Tuple[Response, int]:
     """
     Handle OpenAI errors and return a 401 response.
     """

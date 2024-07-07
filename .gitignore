@@ -1,5 +1,7 @@
 ### Custom
 
+cache/
+
 env/
 .env
 
