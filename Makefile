@@ -1,6 +1,6 @@
 run-server:
 	@echo "Running server..."
-	@python -m server.server
+	@python -m server.app
 
 lint-server:
 	@echo "Linting server..."
