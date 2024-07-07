@@ -1,7 +1,7 @@
 export const BASE_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:5000"
-    : "https://plasmo.vercel.app"
+    : "https://api.simple-english.michaeldemar.co"
 
 // Send a request to simplify with current url - server responds with short summary
 export const MOCK_SERVER_RESPONSE = `
