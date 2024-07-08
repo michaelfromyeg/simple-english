@@ -67,11 +67,14 @@ def status() -> Tuple[Response, int]:
     return jsonify({"status": "up"}), 200
 
 
-def make_simplify_cache_key():
+def make_simplify_cache_key() -> str:
     """
     Turn the Wikipedia URL into a cache key.
     """
     url = request.args.get("url")
+    if not url:
+        return "no_url"
+
     return url_to_wid(url)
 
 
